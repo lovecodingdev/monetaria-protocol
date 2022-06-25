@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.10;
 
+import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+
 /**
  * @title IMToken
  * @author Monetaria
  * @notice Defines the basic interface for an MToken.
  **/
-interface IMToken {
+interface IMToken is IERC20 {
   /**
    * @dev Emitted during the transfer action
    * @param from The user whose tokens are being transferred
