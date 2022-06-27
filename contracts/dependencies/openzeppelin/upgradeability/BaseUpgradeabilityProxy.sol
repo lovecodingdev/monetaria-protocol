@@ -2,7 +2,7 @@
 pragma solidity ^0.8.10;
 
 import './Proxy.sol';
-import '../contracts/Address.sol';
+import '@openzeppelin/contracts/utils/Address.sol';
 
 /**
  * @title BaseUpgradeabilityProxy

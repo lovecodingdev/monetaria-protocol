@@ -66,7 +66,7 @@ library SupplyLogic {
 
     IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, params.amount);
 
-    bool isFirstSupply = IAToken(reserveCache.aTokenAddress).mint(
+    bool isFirstSupply = IMToken(reserveCache.aTokenAddress).mint(
       msg.sender,
       params.onBehalfOf,
       params.amount,
@@ -114,7 +114,7 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = IAToken(reserveCache.aTokenAddress).scaledBalanceOf(msg.sender).rayMul(
+    uint256 userBalance = IMToken(reserveCache.aTokenAddress).scaledBalanceOf(msg.sender).rayMul(
       reserveCache.nextLiquidityIndex
     );
 
@@ -128,7 +128,7 @@ library SupplyLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, 0, amountToWithdraw);
 
-    IAToken(reserveCache.aTokenAddress).burn(
+    IMToken(reserveCache.aTokenAddress).burn(
       msg.sender,
       params.to,
       amountToWithdraw,

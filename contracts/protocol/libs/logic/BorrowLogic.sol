@@ -150,7 +150,7 @@ library BorrowLogic {
     );
 
     if (params.releaseUnderlying) {
-      IAToken(reserveCache.aTokenAddress).transferUnderlyingTo(params.user, params.amount);
+      IMToken(reserveCache.aTokenAddress).transferUnderlyingTo(params.user, params.amount);
     }
 
     emit Borrow(
@@ -207,7 +207,7 @@ library BorrowLogic {
 
     // Allows a user to repay with aTokens without leaving dust from interest.
     if (params.useATokens && params.amount == type(uint256).max) {
-      params.amount = IAToken(reserveCache.aTokenAddress).balanceOf(msg.sender);
+      params.amount = IMToken(reserveCache.aTokenAddress).balanceOf(msg.sender);
     }
 
     if (params.amount < paybackAmount) {
@@ -244,7 +244,7 @@ library BorrowLogic {
     );
 
     if (params.useATokens) {
-      IAToken(reserveCache.aTokenAddress).burn(
+      IMToken(reserveCache.aTokenAddress).burn(
         msg.sender,
         reserveCache.aTokenAddress,
         paybackAmount,
@@ -252,7 +252,7 @@ library BorrowLogic {
       );
     } else {
       IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, paybackAmount);
-      IAToken(reserveCache.aTokenAddress).handleRepayment(msg.sender, paybackAmount);
+      IMToken(reserveCache.aTokenAddress).handleRepayment(msg.sender, paybackAmount);
     }
 
     emit Repay(params.asset, params.onBehalfOf, msg.sender, paybackAmount, params.useATokens);

@@ -78,7 +78,7 @@ library LiquidationLogic {
     uint256 liquidationProtocolFeeAmount;
     address collateralPriceSource;
     address debtPriceSource;
-    IAToken collateralAToken;
+    IMToken collateralAToken;
     DataTypes.ReserveCache debtReserveCache;
   }
 
@@ -212,7 +212,7 @@ library LiquidationLogic {
       vars.actualDebtToLiquidate
     );
 
-    IAToken(vars.debtReserveCache.aTokenAddress).handleRepayment(
+    IMToken(vars.debtReserveCache.aTokenAddress).handleRepayment(
       msg.sender,
       vars.actualDebtToLiquidate
     );
@@ -397,13 +397,13 @@ library LiquidationLogic {
     internal
     view
     returns (
-      IAToken,
+      IMToken,
       address,
       address,
       uint256
     )
   {
-    IAToken collateralAToken = IAToken(collateralReserve.aTokenAddress);
+    IMToken collateralAToken = IMToken(collateralReserve.aTokenAddress);
     uint256 liquidationBonus = collateralReserve.config.getLiquidationBonus();
 
     address collateralPriceSource = params.collateralAsset;
