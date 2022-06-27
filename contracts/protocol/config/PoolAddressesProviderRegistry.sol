@@ -7,10 +7,10 @@ import {IPoolAddressesProviderRegistry} from '../../interfaces/IPoolAddressesPro
 
 /**
  * @title PoolAddressesProviderRegistry
- * @author Aave
- * @notice Main registry of PoolAddressesProvider of Aave markets.
- * @dev Used for indexing purposes of Aave protocol's markets. The id assigned to a PoolAddressesProvider refers to the
- * market it is connected with, for example with `1` for the Aave main market and `2` for the next created.
+ * @author Monetaria
+ * @notice Main registry of PoolAddressesProvider of Monetaria markets.
+ * @dev Used for indexing purposes of Monetaria protocol's markets. The id assigned to a PoolAddressesProvider refers to the
+ * market it is connected with, for example with `1` for the Monetaria main market and `2` for the next created.
  **/
 contract PoolAddressesProviderRegistry is Ownable, IPoolAddressesProviderRegistry {
   // Map of address provider ids (addressesProvider => id)

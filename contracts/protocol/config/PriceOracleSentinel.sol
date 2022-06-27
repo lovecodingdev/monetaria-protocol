@@ -9,7 +9,7 @@ import {IACLManager} from '../../interfaces/IACLManager.sol';
 
 /**
  * @title PriceOracleSentinel
- * @author Aave
+ * @author Monetaria
  * @notice It validates if operations are allowed depending on the PriceOracle health.
  * @dev Once the PriceOracle gets up after an outage/downtime, users can make their positions healthy during a grace
  *  period. So the PriceOracle is considered completely up once its up and the grace period passed.

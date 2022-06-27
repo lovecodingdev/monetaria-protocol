@@ -7,13 +7,13 @@ import {InitializableImmutableAdminUpgradeabilityProxy} from '../libs/upgradeabi
 
 /**
  * @title PoolAddressesProvider
- * @author Aave
+ * @author Monetaria
  * @notice Main registry of addresses part of or connected to the protocol, including permissioned roles
  * @dev Acts as factory of proxies and admin of those, so with right to change its implementations
- * @dev Owned by the Aave Governance
+ * @dev Owned by the Monetaria Governance
  **/
 contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
-  // Identifier of the Aave Market
+  // Identifier of the Monetaria Market
   string private _marketId;
 
   // Map of registered addresses (identifier => registeredAddress)
@@ -182,7 +182,7 @@ contract PoolAddressesProvider is Ownable, IPoolAddressesProvider {
   }
 
   /**
-   * @notice Updates the identifier of the Aave market.
+   * @notice Updates the identifier of the Monetaria market.
    * @param newMarketId The new id of the market
    **/
   function _setMarketId(string memory newMarketId) internal {
