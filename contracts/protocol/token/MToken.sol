@@ -16,11 +16,11 @@ import {IncentivizedERC20} from './base/IncentivizedERC20.sol';
 import {EIP712Base} from './base/EIP712Base.sol';
 
 /**
- * @title Monetaria ERC20 AToken
+ * @title Monetaria ERC20 MToken
  * @author Monetaria
  * @notice Implementation of the interest bearing token for the Monetaria protocol
  */
-contract AToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, IMToken {
+contract MToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, IMToken {
   using WadRayMath for uint256;
   using SafeCast for uint256;
   using GPv2SafeERC20 for IERC20;
