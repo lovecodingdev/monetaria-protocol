@@ -8,7 +8,7 @@ import {DataTypes} from '../libs/types/DataTypes.sol';
 
 /**
  * @title PoolStorage
- * @author Aave
+ * @author Monetaria
  * @notice Contract used as storage of the Pool contract.
  * @dev It defines the storage layout of the Pool contract.
  */
