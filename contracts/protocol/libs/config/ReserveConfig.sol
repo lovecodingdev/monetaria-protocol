@@ -5,9 +5,9 @@ import {Errors} from '../helpers/Errors.sol';
 import {DataTypes} from '../types/DataTypes.sol';
 
 /**
- * @title ReserveConfiguration library
+ * @title ReserveConfig library
  * @author Monetaria
- * @notice Implements the bitmap logic to handle the reserve configuration
+ * @notice Implements the bitmap logic to handle the reserve config
  */
 library ReserveConfig {
   uint256 internal constant LTV_MASK =                       0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000; // prettier-ignore
@@ -67,7 +67,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the Loan to Value of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param ltv The new ltv
    **/
   function setLtv(DataTypes.ReserveConfigMap memory self, uint256 ltv) internal pure {
@@ -78,7 +78,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the Loan to Value of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The loan to value
    **/
   function getLtv(DataTypes.ReserveConfigMap memory self) internal pure returns (uint256) {
@@ -87,7 +87,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the liquidation threshold of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param threshold The new liquidation threshold
    **/
   function setLiquidationThreshold(DataTypes.ReserveConfigMap memory self, uint256 threshold)
@@ -103,7 +103,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the liquidation threshold of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The liquidation threshold
    **/
   function getLiquidationThreshold(DataTypes.ReserveConfigMap memory self)
@@ -116,7 +116,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the liquidation bonus of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param bonus The new liquidation bonus
    **/
   function setLiquidationBonus(DataTypes.ReserveConfigMap memory self, uint256 bonus)
@@ -132,7 +132,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the liquidation bonus of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The liquidation bonus
    **/
   function getLiquidationBonus(DataTypes.ReserveConfigMap memory self)
@@ -145,7 +145,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the decimals of the underlying asset of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param decimals The decimals
    **/
   function setDecimals(DataTypes.ReserveConfigMap memory self, uint256 decimals)
@@ -159,7 +159,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the decimals of the underlying asset of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The decimals of the asset
    **/
   function getDecimals(DataTypes.ReserveConfigMap memory self)
@@ -172,7 +172,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the active state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param active The active state
    **/
   function setActive(DataTypes.ReserveConfigMap memory self, bool active) internal pure {
@@ -183,7 +183,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the active state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The active state
    **/
   function getActive(DataTypes.ReserveConfigMap memory self) internal pure returns (bool) {
@@ -192,7 +192,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the frozen state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param frozen The frozen state
    **/
   function setFrozen(DataTypes.ReserveConfigMap memory self, bool frozen) internal pure {
@@ -203,7 +203,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the frozen state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The frozen state
    **/
   function getFrozen(DataTypes.ReserveConfigMap memory self) internal pure returns (bool) {
@@ -212,7 +212,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the paused state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param paused The paused state
    **/
   function setPaused(DataTypes.ReserveConfigMap memory self, bool paused) internal pure {
@@ -223,7 +223,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the paused state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The paused state
    **/
   function getPaused(DataTypes.ReserveConfigMap memory self) internal pure returns (bool) {
@@ -236,7 +236,7 @@ library ReserveConfig {
    * amount will be accumulated in the isolated collateral's total debt exposure.
    * @dev Only assets of the same family (eg USD stablecoins) should be borrowable in isolation mode to keep
    * consistency in the debt ceiling calculations.
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param borrowable True if the asset is borrowable
    **/
   function setBorrowableInIsolation(DataTypes.ReserveConfigMap memory self, bool borrowable)
@@ -254,7 +254,7 @@ library ReserveConfig {
    * isolated collateral is accounted for in the isolated collateral's total debt exposure.
    * @dev Only assets of the same family (eg USD stablecoins) should be borrowable in isolation mode to keep
    * consistency in the debt ceiling calculations.
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The borrowable in isolation flag
    **/
   function getBorrowableInIsolation(DataTypes.ReserveConfigMap memory self)
@@ -268,7 +268,7 @@ library ReserveConfig {
   /**
    * @notice Sets the siloed borrowing flag for the reserve.
    * @dev When this flag is set to true, users borrowing this asset will not be allowed to borrow any other asset.
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param siloed True if the asset is siloed
    **/
   function setSiloedBorrowing(DataTypes.ReserveConfigMap memory self, bool siloed)
@@ -283,7 +283,7 @@ library ReserveConfig {
   /**
    * @notice Gets the siloed borrowing flag for the reserve.
    * @dev When this flag is set to true, users borrowing this asset will not be allowed to borrow any other asset.
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The siloed borrowing flag
    **/
   function getSiloedBorrowing(DataTypes.ReserveConfigMap memory self)
@@ -296,7 +296,7 @@ library ReserveConfig {
 
   /**
    * @notice Enables or disables borrowing on the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param enabled True if the borrowing needs to be enabled, false otherwise
    **/
   function setBorrowingEnabled(DataTypes.ReserveConfigMap memory self, bool enabled)
@@ -310,7 +310,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the borrowing state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The borrowing state
    **/
   function getBorrowingEnabled(DataTypes.ReserveConfigMap memory self)
@@ -323,7 +323,7 @@ library ReserveConfig {
 
   /**
    * @notice Enables or disables stable rate borrowing on the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param enabled True if the stable rate borrowing needs to be enabled, false otherwise
    **/
   function setStableRateBorrowingEnabled(
@@ -337,7 +337,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the stable rate borrowing state of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The stable rate borrowing state
    **/
   function getStableRateBorrowingEnabled(DataTypes.ReserveConfigMap memory self)
@@ -350,7 +350,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the reserve factor of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param reserveFactor The reserve factor
    **/
   function setReserveFactor(DataTypes.ReserveConfigMap memory self, uint256 reserveFactor)
@@ -366,7 +366,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the reserve factor of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The reserve factor
    **/
   function getReserveFactor(DataTypes.ReserveConfigMap memory self)
@@ -379,7 +379,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the borrow cap of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param borrowCap The borrow cap
    **/
   function setBorrowCap(DataTypes.ReserveConfigMap memory self, uint256 borrowCap)
@@ -393,7 +393,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the borrow cap of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The borrow cap
    **/
   function getBorrowCap(DataTypes.ReserveConfigMap memory self)
@@ -406,7 +406,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the supply cap of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param supplyCap The supply cap
    **/
   function setSupplyCap(DataTypes.ReserveConfigMap memory self, uint256 supplyCap)
@@ -420,7 +420,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the supply cap of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The supply cap
    **/
   function getSupplyCap(DataTypes.ReserveConfigMap memory self)
@@ -433,7 +433,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the debt ceiling in isolation mode for the asset
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param ceiling The maximum debt ceiling for the asset
    **/
   function setDebtCeiling(DataTypes.ReserveConfigMap memory self, uint256 ceiling)
@@ -447,7 +447,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the debt ceiling for the asset if the asset is in isolation mode
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The debt ceiling (0 = isolation mode disabled)
    **/
   function getDebtCeiling(DataTypes.ReserveConfigMap memory self)
@@ -460,7 +460,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the liquidation protocol fee of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param liquidationProtocolFee The liquidation protocol fee
    **/
   function setLiquidationProtocolFee(
@@ -479,7 +479,7 @@ library ReserveConfig {
 
   /**
    * @dev Gets the liquidation protocol fee
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The liquidation protocol fee
    **/
   function getLiquidationProtocolFee(DataTypes.ReserveConfigMap memory self)
@@ -493,7 +493,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the unbacked mint cap of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param unbackedMintCap The unbacked mint cap
    **/
   function setUnbackedMintCap(
@@ -509,7 +509,7 @@ library ReserveConfig {
 
   /**
    * @dev Gets the unbacked mint cap of the reserve
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The unbacked mint cap
    **/
   function getUnbackedMintCap(DataTypes.ReserveConfigMap memory self)
@@ -522,7 +522,7 @@ library ReserveConfig {
 
   /**
    * @notice Sets the eMode asset category
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @param category The asset category when the user selects the eMode
    **/
   function setEModeCategory(DataTypes.ReserveConfigMap memory self, uint256 category)
@@ -536,7 +536,7 @@ library ReserveConfig {
 
   /**
    * @dev Gets the eMode asset category
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The eMode category for the asset
    **/
   function getEModeCategory(DataTypes.ReserveConfigMap memory self)
@@ -548,8 +548,8 @@ library ReserveConfig {
   }
 
   /**
-   * @notice Gets the configuration flags of the reserve
-   * @param self The reserve configuration
+   * @notice Gets the config flags of the reserve
+   * @param self The reserve config
    * @return The state flag representing active
    * @return The state flag representing frozen
    * @return The state flag representing borrowing enabled
@@ -579,8 +579,8 @@ library ReserveConfig {
   }
 
   /**
-   * @notice Gets the configuration parameters of the reserve from storage
-   * @param self The reserve configuration
+   * @notice Gets the config parameters of the reserve from storage
+   * @param self The reserve config
    * @return The state param representing ltv
    * @return The state param representing liquidation threshold
    * @return The state param representing liquidation bonus
@@ -614,7 +614,7 @@ library ReserveConfig {
 
   /**
    * @notice Gets the caps parameters of the reserve from storage
-   * @param self The reserve configuration
+   * @param self The reserve config
    * @return The state param representing borrow cap
    * @return The state param representing supply cap.
    **/

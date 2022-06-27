@@ -3,8 +3,8 @@ pragma solidity ^0.8.10;
 
 library DataTypes {
   struct ReserveData {
-    //stores the reserve Config
-    ReserveConfigMap Config;
+    //stores the reserve config
+    ReserveConfigMap config;
     //the liquidity index. Expressed in ray
     uint128 liquidityIndex;
     //the current supply rate. Expressed in ray
