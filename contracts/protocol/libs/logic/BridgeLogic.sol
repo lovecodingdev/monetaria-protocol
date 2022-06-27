@@ -36,16 +36,16 @@ library BridgeLogic {
   event BackUnbacked(address indexed reserve, address indexed backer, uint256 amount, uint256 fee);
 
   /**
-   * @notice Mint unbacked aTokens to a user and updates the unbacked for the reserve.
+   * @notice Mint unbacked mTokens to a user and updates the unbacked for the reserve.
    * @dev Essentially a supply without transferring the underlying.
    * @dev Emits the `MintUnbacked` event
    * @dev Emits the `ReserveUsedAsCollateralEnabled` if asset is set as collateral
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param userConfig The user config mapping that tracks the supplied/borrowed assets
-   * @param asset The address of the underlying asset to mint aTokens of
+   * @param asset The address of the underlying asset to mint mTokens of
    * @param amount The amount to mint
-   * @param onBehalfOf The address that will receive the aTokens
+   * @param onBehalfOf The address that will receive the mTokens
    * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
@@ -74,7 +74,7 @@ library BridgeLogic {
 
     reserve.updateInterestRates(reserveCache, asset, 0, 0);
 
-    bool isFirstSupply = IMToken(reserveCache.aTokenAddress).mint(
+    bool isFirstSupply = IMToken(reserveCache.mTokenAddress).mint(
       msg.sender,
       onBehalfOf,
       amount,
@@ -125,7 +125,7 @@ library BridgeLogic {
     uint256 added = backingAmount + fee;
 
     reserveCache.nextLiquidityIndex = reserve.cumulateToLiquidityIndex(
-      IERC20(reserveCache.aTokenAddress).totalSupply(),
+      IERC20(reserveCache.mTokenAddress).totalSupply(),
       feeToLP
     );
 
@@ -134,7 +134,7 @@ library BridgeLogic {
     reserve.unbacked -= backingAmount.toUint128();
     reserve.updateInterestRates(reserveCache, asset, added, 0);
 
-    IERC20(asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, added);
+    IERC20(asset).safeTransferFrom(msg.sender, reserveCache.mTokenAddress, added);
 
     emit BackUnbacked(asset, msg.sender, backingAmount, fee);
   }

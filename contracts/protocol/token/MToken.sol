@@ -28,14 +28,14 @@ contract MToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, I
   bytes32 public constant PERMIT_TYPEHASH =
     keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
 
-  uint256 public constant ATOKEN_REVISION = 0x1;
+  uint256 public constant MTOKEN_REVISION = 0x1;
 
   address internal _treasury;
   address internal _underlyingAsset;
 
   /// @inheritdoc VersionedInitializable
   function getRevision() internal pure virtual override returns (uint256) {
-    return ATOKEN_REVISION;
+    return MTOKEN_REVISION;
   }
 
   /**
@@ -43,7 +43,7 @@ contract MToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, I
    * @param pool The address of the Pool contract
    */
   constructor(IPool pool)
-    ScaledBalanceTokenBase(pool, 'ATOKEN_IMPL', 'ATOKEN_IMPL', 0)
+    ScaledBalanceTokenBase(pool, 'MTOKEN_IMPL', 'MTOKEN_IMPL', 0)
     EIP712Base()
   {
     // Intentionally left blank
@@ -55,15 +55,15 @@ contract MToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, I
     address treasury,
     address underlyingAsset,
     IMonetariaIncentivesController incentivesController,
-    uint8 aTokenDecimals,
-    string calldata aTokenName,
-    string calldata aTokenSymbol,
+    uint8 mTokenDecimals,
+    string calldata mTokenName,
+    string calldata mTokenSymbol,
     bytes calldata params
   ) external override initializer {
     require(initializingPool == POOL, Errors.POOL_ADDRESSES_DO_NOT_MATCH);
-    _setName(aTokenName);
-    _setSymbol(aTokenSymbol);
-    _setDecimals(aTokenDecimals);
+    _setName(mTokenName);
+    _setSymbol(mTokenSymbol);
+    _setDecimals(mTokenDecimals);
 
     _treasury = treasury;
     _underlyingAsset = underlyingAsset;
@@ -76,9 +76,9 @@ contract MToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, I
       address(POOL),
       treasury,
       address(incentivesController),
-      aTokenDecimals,
-      aTokenName,
-      aTokenSymbol,
+      mTokenDecimals,
+      mTokenName,
+      mTokenSymbol,
       params
     );
   }
@@ -196,7 +196,7 @@ contract MToken is VersionedInitializable, ScaledBalanceTokenBase, EIP712Base, I
   }
 
   /**
-   * @notice Transfers the aTokens between two users. Validates the transfer
+   * @notice Transfers the mTokens between two users. Validates the transfer
    * (ie checks for valid HF after the transfer) if required
    * @param from The source address
    * @param to The destination address

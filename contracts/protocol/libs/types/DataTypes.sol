@@ -19,8 +19,8 @@ library DataTypes {
     uint40 lastUpdateTimestamp;
     //the id of the reserve. Represents the position in the list of the active reserves
     uint16 id;
-    //aToken address
-    address aTokenAddress;
+    //mToken address
+    address mTokenAddress;
     //stableDebtToken address
     address stableDebtTokenAddress;
     //variableDebtToken address
@@ -29,7 +29,7 @@ library DataTypes {
     address interestRateStrategyAddress;
     //the current treasury balance, scaled
     uint128 accruedToTreasury;
-    //the outstanding unbacked aTokens minted through the bridging feature
+    //the outstanding unbacked mTokens minted through the bridging feature
     uint128 unbacked;
     //the outstanding debt borrowed against this asset in isolation mode
     uint128 isolationModeTotalDebt;
@@ -100,7 +100,7 @@ library DataTypes {
     uint256 currVariableBorrowRate;
     uint256 reserveFactor;
     ReserveConfigMap reserveConfig;
-    address aTokenAddress;
+    address mTokenAddress;
     address stableDebtTokenAddress;
     address variableDebtTokenAddress;
     uint40 reserveLastUpdateTimestamp;
@@ -113,7 +113,7 @@ library DataTypes {
     address collateralAsset;
     address debtAsset;
     address user;
-    bool receiveAToken;
+    bool receiveMToken;
     address priceOracle;
     uint8 userEModeCategory;
     address priceOracleSentinel;
@@ -146,7 +146,7 @@ library DataTypes {
     uint256 amount;
     InterestRateMode interestRateMode;
     address onBehalfOf;
-    bool useATokens;
+    bool useMTokens;
   }
 
   struct ExecuteWithdrawParams {
@@ -253,12 +253,12 @@ library DataTypes {
     uint256 averageStableBorrowRate;
     uint256 reserveFactor;
     address reserve;
-    address aToken;
+    address mToken;
   }
 
   struct InitReserveParams {
     address asset;
-    address aTokenAddress;
+    address mTokenAddress;
     address stableDebtAddress;
     address variableDebtAddress;
     address interestRateStrategyAddress;

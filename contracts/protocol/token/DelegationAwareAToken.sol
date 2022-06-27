@@ -6,12 +6,12 @@ import {IDelegationToken} from '../../interfaces/IDelegationToken.sol';
 import {MToken} from './MToken.sol';
 
 /**
- * @title DelegationAwareAToken
+ * @title DelegationAwareMToken
  * @author Monetaria
  * @notice MToken enabled to delegate voting power of the underlying asset to a different address
  * @dev The underlying asset needs to be compatible with the COMP delegation interface
  */
-contract DelegationAwareAToken is MToken {
+contract DelegationAwareMToken is MToken {
   /**
    * @dev Emitted when underlying voting power is delegated
    * @param delegatee The address of the delegatee

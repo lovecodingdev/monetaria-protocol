@@ -64,9 +64,9 @@ library SupplyLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, params.amount, 0);
 
-    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, params.amount);
+    IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.mTokenAddress, params.amount);
 
-    bool isFirstSupply = IMToken(reserveCache.aTokenAddress).mint(
+    bool isFirstSupply = IMToken(reserveCache.mTokenAddress).mint(
       msg.sender,
       params.onBehalfOf,
       params.amount,
@@ -91,7 +91,7 @@ library SupplyLogic {
   }
 
   /**
-   * @notice Implements the withdraw feature. Through `withdraw()`, users redeem their aTokens for the underlying asset
+   * @notice Implements the withdraw feature. Through `withdraw()`, users redeem their mTokens for the underlying asset
    * previously supplied in the Monetaria protocol.
    * @dev Emits the `Withdraw()` event.
    * @dev If the user withdraws everything, `ReserveUsedAsCollateralDisabled()` is emitted.
@@ -114,7 +114,7 @@ library SupplyLogic {
 
     reserve.updateState(reserveCache);
 
-    uint256 userBalance = IMToken(reserveCache.aTokenAddress).scaledBalanceOf(msg.sender).rayMul(
+    uint256 userBalance = IMToken(reserveCache.mTokenAddress).scaledBalanceOf(msg.sender).rayMul(
       reserveCache.nextLiquidityIndex
     );
 
@@ -128,7 +128,7 @@ library SupplyLogic {
 
     reserve.updateInterestRates(reserveCache, params.asset, 0, amountToWithdraw);
 
-    IMToken(reserveCache.aTokenAddress).burn(
+    IMToken(reserveCache.mTokenAddress).burn(
       msg.sender,
       params.to,
       amountToWithdraw,
@@ -162,7 +162,7 @@ library SupplyLogic {
   }
 
   /**
-   * @notice Validates a transfer of aTokens. The sender is subjected to health factor validation to avoid
+   * @notice Validates a transfer of mTokens. The sender is subjected to health factor validation to avoid
    * collateralization constraints violation.
    * @dev Emits the `ReserveUsedAsCollateralEnabled()` event for the `to` account, if the asset is being activated as
    * collateral.
@@ -256,7 +256,7 @@ library SupplyLogic {
     DataTypes.ReserveData storage reserve = reservesData[asset];
     DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
-    uint256 userBalance = IERC20(reserveCache.aTokenAddress).balanceOf(msg.sender);
+    uint256 userBalance = IERC20(reserveCache.mTokenAddress).balanceOf(msg.sender);
 
     ValidationLogic.validateSetUseReserveAsCollateral(reserveCache, userBalance);
 

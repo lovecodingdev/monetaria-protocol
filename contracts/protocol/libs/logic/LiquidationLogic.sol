@@ -43,7 +43,7 @@ library LiquidationLogic {
     uint256 debtToCover,
     uint256 liquidatedCollateralAmount,
     address liquidator,
-    bool receiveAToken
+    bool receiveMToken
   );
 
   /**
@@ -78,7 +78,7 @@ library LiquidationLogic {
     uint256 liquidationProtocolFeeAmount;
     address collateralPriceSource;
     address debtPriceSource;
-    IMToken collateralAToken;
+    IMToken collateralMToken;
     DataTypes.ReserveCache debtReserveCache;
   }
 
@@ -139,13 +139,13 @@ library LiquidationLogic {
     );
 
     (
-      vars.collateralAToken,
+      vars.collateralMToken,
       vars.collateralPriceSource,
       vars.debtPriceSource,
       vars.liquidationBonus
     ) = _getConfigData(eModeCategories, collateralReserve, params);
 
-    vars.userCollateralBalance = vars.collateralAToken.balanceOf(params.user);
+    vars.userCollateralBalance = vars.collateralMToken.balanceOf(params.user);
 
     (
       vars.actualCollateralToLiquidate,
@@ -183,17 +183,17 @@ library LiquidationLogic {
       vars.actualDebtToLiquidate
     );
 
-    if (params.receiveAToken) {
-      _liquidateATokens(reservesData, reservesList, usersConfig, collateralReserve, params, vars);
+    if (params.receiveMToken) {
+      _liquidateMTokens(reservesData, reservesList, usersConfig, collateralReserve, params, vars);
     } else {
-      _burnCollateralATokens(collateralReserve, params, vars);
+      _burnCollateralMTokens(collateralReserve, params, vars);
     }
 
     // Transfer fee to treasury if it is non-zero
     if (vars.liquidationProtocolFeeAmount != 0) {
-      vars.collateralAToken.transferOnLiquidation(
+      vars.collateralMToken.transferOnLiquidation(
         params.user,
-        vars.collateralAToken.RESERVE_TREASURY_ADDRESS(),
+        vars.collateralMToken.RESERVE_TREASURY_ADDRESS(),
         vars.liquidationProtocolFeeAmount
       );
     }
@@ -205,14 +205,14 @@ library LiquidationLogic {
       emit ReserveUsedAsCollateralDisabled(params.collateralAsset, params.user);
     }
 
-    // Transfers the debt asset being repaid to the aToken, where the liquidity is kept
+    // Transfers the debt asset being repaid to the mToken, where the liquidity is kept
     IERC20(params.debtAsset).safeTransferFrom(
       msg.sender,
-      vars.debtReserveCache.aTokenAddress,
+      vars.debtReserveCache.mTokenAddress,
       vars.actualDebtToLiquidate
     );
 
-    IMToken(vars.debtReserveCache.aTokenAddress).handleRepayment(
+    IMToken(vars.debtReserveCache.mTokenAddress).handleRepayment(
       msg.sender,
       vars.actualDebtToLiquidate
     );
@@ -224,18 +224,18 @@ library LiquidationLogic {
       vars.actualDebtToLiquidate,
       vars.actualCollateralToLiquidate,
       msg.sender,
-      params.receiveAToken
+      params.receiveMToken
     );
   }
 
   /**
-   * @notice Burns the collateral aTokens and transfers the underlying to the liquidator.
+   * @notice Burns the collateral mTokens and transfers the underlying to the liquidator.
    * @dev   The function also updates the state and the interest rate of the collateral reserve.
    * @param collateralReserve The data of the collateral reserve
    * @param params The additional parameters needed to execute the liquidation function
    * @param vars The executeLiquidationCall() function local vars
    */
-  function _burnCollateralATokens(
+  function _burnCollateralMTokens(
     DataTypes.ReserveData storage collateralReserve,
     DataTypes.ExecuteLiquidationCallParams memory params,
     LiquidationCallLocalVars memory vars
@@ -249,8 +249,8 @@ library LiquidationLogic {
       vars.actualCollateralToLiquidate
     );
 
-    // Burn the equivalent amount of aToken, sending the underlying to the liquidator
-    vars.collateralAToken.burn(
+    // Burn the equivalent amount of mToken, sending the underlying to the liquidator
+    vars.collateralMToken.burn(
       params.user,
       msg.sender,
       vars.actualCollateralToLiquidate,
@@ -259,8 +259,8 @@ library LiquidationLogic {
   }
 
   /**
-   * @notice Liquidates the user aTokens by transferring them to the liquidator.
-   * @dev   The function also checks the state of the liquidator and activates the aToken as collateral
+   * @notice Liquidates the user mTokens by transferring them to the liquidator.
+   * @dev   The function also checks the state of the liquidator and activates the mToken as collateral
    *        as in standard transfers if the isolation mode constraints are respected.
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
@@ -269,7 +269,7 @@ library LiquidationLogic {
    * @param params The additional parameters needed to execute the liquidation function
    * @param vars The executeLiquidationCall() function local vars
    */
-  function _liquidateATokens(
+  function _liquidateMTokens(
     mapping(address => DataTypes.ReserveData) storage reservesData,
     mapping(uint256 => address) storage reservesList,
     mapping(address => DataTypes.UserConfigMap) storage usersConfig,
@@ -277,14 +277,14 @@ library LiquidationLogic {
     DataTypes.ExecuteLiquidationCallParams memory params,
     LiquidationCallLocalVars memory vars
   ) internal {
-    uint256 liquidatorPreviousATokenBalance = IERC20(vars.collateralAToken).balanceOf(msg.sender);
-    vars.collateralAToken.transferOnLiquidation(
+    uint256 liquidatorPreviousMTokenBalance = IERC20(vars.collateralMToken).balanceOf(msg.sender);
+    vars.collateralMToken.transferOnLiquidation(
       params.user,
       msg.sender,
       vars.actualCollateralToLiquidate
     );
 
-    if (liquidatorPreviousATokenBalance == 0) {
+    if (liquidatorPreviousMTokenBalance == 0) {
       DataTypes.UserConfigMap storage liquidatorConfig = usersConfig[msg.sender];
       if (
         ValidationLogic.validateUseAsCollateral(
@@ -384,7 +384,7 @@ library LiquidationLogic {
    * @param eModeCategories The config of all the efficiency mode categories
    * @param collateralReserve The data of the collateral reserve
    * @param params The additional parameters needed to execute the liquidation function
-   * @return The collateral aToken
+   * @return The collateral mToken
    * @return The address to use as price source for the collateral
    * @return The address to use as price source for the debt
    * @return The liquidation bonus to apply to the collateral
@@ -403,7 +403,7 @@ library LiquidationLogic {
       uint256
     )
   {
-    IMToken collateralAToken = IMToken(collateralReserve.aTokenAddress);
+    IMToken collateralMToken = IMToken(collateralReserve.mTokenAddress);
     uint256 liquidationBonus = collateralReserve.config.getLiquidationBonus();
 
     address collateralPriceSource = params.collateralAsset;
@@ -431,7 +431,7 @@ library LiquidationLogic {
       }
     }
 
-    return (collateralAToken, collateralPriceSource, debtPriceSource, liquidationBonus);
+    return (collateralMToken, collateralPriceSource, debtPriceSource, liquidationBonus);
   }
 
   struct AvailableCollateralToLiquidateLocalVars {

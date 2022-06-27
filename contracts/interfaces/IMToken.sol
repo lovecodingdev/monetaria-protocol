@@ -21,9 +21,9 @@ interface IMToken is IERC20, IScaledBalanceToken, IInitializableMToken {
   event BalanceTransfer(address indexed from, address indexed to, uint256 value, uint256 index);
 
   /**
-   * @notice Mints `amount` aTokens to `user`
+   * @notice Mints `amount` mTokens to `user`
    * @param caller The address performing the mint
-   * @param onBehalfOf The address of the user that will receive the minted aTokens
+   * @param onBehalfOf The address of the user that will receive the minted mTokens
    * @param amount The amount of tokens getting minted
    * @param index The next liquidity index of the reserve
    * @return `true` if the the previous balance of the user was 0
@@ -36,10 +36,10 @@ interface IMToken is IERC20, IScaledBalanceToken, IInitializableMToken {
   ) external returns (bool);
 
   /**
-   * @notice Burns aTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
+   * @notice Burns mTokens from `user` and sends the equivalent amount of underlying to `receiverOfUnderlying`
    * @dev In some instances, the mint event could be emitted from a burn transaction
    * if the amount to burn is less than the interest that the user accrued
-   * @param from The address from which the aTokens will be burned
+   * @param from The address from which the mTokens will be burned
    * @param receiverOfUnderlying The address that will receive the underlying
    * @param amount The amount being burned
    * @param index The next liquidity index of the reserve
@@ -52,15 +52,15 @@ interface IMToken is IERC20, IScaledBalanceToken, IInitializableMToken {
   ) external;
 
   /**
-   * @notice Mints aTokens to the reserve treasury
+   * @notice Mints mTokens to the reserve treasury
    * @param amount The amount of tokens getting minted
    * @param index The next liquidity index of the reserve
    */
   function mintToTreasury(uint256 amount, uint256 index) external;
 
   /**
-   * @notice Transfers aTokens in the event of a borrow being liquidated, in case the liquidators reclaims the aToken
-   * @param from The address getting liquidated, current owner of the aTokens
+   * @notice Transfers mTokens in the event of a borrow being liquidated, in case the liquidators reclaims the mToken
+   * @param from The address getting liquidated, current owner of the mTokens
    * @param to The recipient
    * @param value The amount of tokens getting transferred
    **/
@@ -79,9 +79,9 @@ interface IMToken is IERC20, IScaledBalanceToken, IInitializableMToken {
   function transferUnderlyingTo(address user, uint256 amount) external;
 
   /**
-   * @notice Handles the underlying received by the aToken after the transfer has been completed.
+   * @notice Handles the underlying received by the mToken after the transfer has been completed.
    * @dev The default implementation is empty as with standard ERC20 tokens, nothing needs to be done after the
-   * transfer is concluded. However in the future there may be aTokens that allow for example to stake the underlying
+   * transfer is concluded. However in the future there may be mTokens that allow for example to stake the underlying
    * to receive LM rewards. In that case, `handleRepayment()` would perform the staking of the underlying asset.
    * @param user The user executing the repayment
    * @param amount The amount getting repaid
@@ -111,13 +111,13 @@ interface IMToken is IERC20, IScaledBalanceToken, IInitializableMToken {
   ) external;
 
   /**
-   * @notice Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
+   * @notice Returns the address of the underlying asset of this mToken (E.g. WETH for aWETH)
    * @return The address of the underlying asset
    **/
   function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 
   /**
-   * @notice Returns the address of the Monetaria treasury, receiving the fees on this aToken.
+   * @notice Returns the address of the Monetaria treasury, receiving the fees on this mToken.
    * @return Address of the Monetaria treasury
    **/
   function RESERVE_TREASURY_ADDRESS() external view returns (address);

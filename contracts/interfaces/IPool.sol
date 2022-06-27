@@ -14,7 +14,7 @@ interface IPool {
    * @dev Emitted on mintUnbacked()
    * @param reserve The address of the underlying asset of the reserve
    * @param user The address initiating the supply
-   * @param onBehalfOf The beneficiary of the supplied assets, receiving the aTokens
+   * @param onBehalfOf The beneficiary of the supplied assets, receiving the mTokens
    * @param amount The amount of supplied assets
    * @param referralCode The referral code used
    **/
@@ -39,7 +39,7 @@ interface IPool {
    * @dev Emitted on supply()
    * @param reserve The address of the underlying asset of the reserve
    * @param user The address initiating the supply
-   * @param onBehalfOf The beneficiary of the supply, receiving the aTokens
+   * @param onBehalfOf The beneficiary of the supply, receiving the mTokens
    * @param amount The amount supplied
    * @param referralCode The referral code used
    **/
@@ -54,7 +54,7 @@ interface IPool {
   /**
    * @dev Emitted on withdraw()
    * @param reserve The address of the underlying asset being withdrawn
-   * @param user The address initiating the withdrawal, owner of aTokens
+   * @param user The address initiating the withdrawal, owner of mTokens
    * @param to The address that will receive the underlying
    * @param amount The amount to be withdrawn
    **/
@@ -87,14 +87,14 @@ interface IPool {
    * @param user The beneficiary of the repayment, getting his debt reduced
    * @param repayer The address of the user initiating the repay(), providing the funds
    * @param amount The amount repaid
-   * @param useATokens True if the repayment is done using aTokens, `false` if done with underlying asset directly
+   * @param useMTokens True if the repayment is done using mTokens, `false` if done with underlying asset directly
    **/
   event Repay(
     address indexed reserve,
     address indexed user,
     address indexed repayer,
     uint256 amount,
-    bool useATokens
+    bool useMTokens
   );
 
   /**
@@ -172,7 +172,7 @@ interface IPool {
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
    * @param liquidatedCollateralAmount The amount of collateral received by the liquidator
    * @param liquidator The address of the liquidator
-   * @param receiveAToken True if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * @param receiveMToken True if the liquidators wants to receive the collateral mTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
   event LiquidationCall(
@@ -182,7 +182,7 @@ interface IPool {
     uint256 debtToCover,
     uint256 liquidatedCollateralAmount,
     address liquidator,
-    bool receiveAToken
+    bool receiveMToken
   );
 
   /**
@@ -204,17 +204,17 @@ interface IPool {
   );
 
   /**
-   * @dev Emitted when the protocol treasury receives minted aTokens from the accrued interest.
+   * @dev Emitted when the protocol treasury receives minted mTokens from the accrued interest.
    * @param reserve The address of the reserve
    * @param amountMinted The amount minted to the treasury
    **/
   event MintedToTreasury(address indexed reserve, uint256 amountMinted);
 
   /**
-   * @dev Mints an `amount` of aTokens to the `onBehalfOf`
+   * @dev Mints an `amount` of mTokens to the `onBehalfOf`
    * @param asset The address of the underlying asset to mint
    * @param amount The amount to mint
-   * @param onBehalfOf The address that will receive the aTokens
+   * @param onBehalfOf The address that will receive the mTokens
    * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
    **/
@@ -238,12 +238,12 @@ interface IPool {
   ) external;
 
   /**
-   * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
+   * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying mTokens.
    * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
-   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
-   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
+   * @param onBehalfOf The address that will receive the mTokens, same as msg.sender if the user
+   *   wants to receive them on his own wallet, or a different address if the beneficiary of mTokens
    *   is a different wallet
    * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man
@@ -260,8 +260,8 @@ interface IPool {
    * see: https://eips.ethereum.org/EIPS/eip-2612 and https://eips.ethereum.org/EIPS/eip-713
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
-   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
-   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
+   * @param onBehalfOf The address that will receive the mTokens, same as msg.sender if the user
+   *   wants to receive them on his own wallet, or a different address if the beneficiary of mTokens
    *   is a different wallet
    * @param deadline The deadline timestamp that the permit is valid
    * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
@@ -282,11 +282,11 @@ interface IPool {
   ) external;
 
   /**
-   * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent aTokens owned
+   * @notice Withdraws an `amount` of underlying asset from the reserve, burning the equivalent mTokens owned
    * E.g. User has 100 aUSDC, calls withdraw() and receives 100 USDC, burning the 100 aUSDC
    * @param asset The address of the underlying asset to withdraw
    * @param amount The underlying amount to be withdrawn
-   *   - Send the value type(uint256).max in order to withdraw the whole aToken balance
+   *   - Send the value type(uint256).max in order to withdraw the whole mToken balance
    * @param to The address that will receive the underlying, same as msg.sender if the user
    *   wants to receive it on his own wallet, or a different address if the beneficiary is a
    *   different wallet
@@ -368,10 +368,10 @@ interface IPool {
   ) external returns (uint256);
 
   /**
-   * @notice Repays a borrowed `amount` on a specific reserve using the reserve aTokens, burning the
+   * @notice Repays a borrowed `amount` on a specific reserve using the reserve mTokens, burning the
    * equivalent debt tokens
    * - E.g. User repays 100 USDC using 100 aUSDC, burning 100 variable/stable debt tokens
-   * @dev  Passing uint256.max as amount will clean up any residual aToken dust balance, if the user aToken
+   * @dev  Passing uint256.max as amount will clean up any residual mToken dust balance, if the user mToken
    * balance is not enough to cover the whole debt
    * @param asset The address of the borrowed underlying asset previously borrowed
    * @param amount The amount to repay
@@ -379,7 +379,7 @@ interface IPool {
    * @param interestRateMode The interest rate mode at of the debt the user wants to repay: 1 for Stable, 2 for Variable
    * @return The final amount repaid
    **/
-  function repayWithATokens(
+  function repayWithMTokens(
     address asset,
     uint256 amount,
     uint256 interestRateMode
@@ -418,7 +418,7 @@ interface IPool {
    * @param debtAsset The address of the underlying borrowed asset to be repaid with the liquidation
    * @param user The address of the borrower getting liquidated
    * @param debtToCover The debt amount of borrowed `asset` the liquidator wants to cover
-   * @param receiveAToken True if the liquidators wants to receive the collateral aTokens, `false` if he wants
+   * @param receiveMToken True if the liquidators wants to receive the collateral mTokens, `false` if he wants
    * to receive the underlying collateral asset directly
    **/
   function liquidationCall(
@@ -426,7 +426,7 @@ interface IPool {
     address debtAsset,
     address user,
     uint256 debtToCover,
-    bool receiveAToken
+    bool receiveMToken
   ) external;
 
   /**
@@ -499,18 +499,18 @@ interface IPool {
     );
 
   /**
-   * @notice Initializes a reserve, activating it, assigning an aToken and debt tokens and an
+   * @notice Initializes a reserve, activating it, assigning an mToken and debt tokens and an
    * interest rate strategy
    * @dev Only callable by the PoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
-   * @param aTokenAddress The address of the aToken that will be assigned to the reserve
+   * @param mTokenAddress The address of the mToken that will be assigned to the reserve
    * @param stableDebtAddress The address of the StableDebtToken that will be assigned to the reserve
    * @param variableDebtAddress The address of the VariableDebtToken that will be assigned to the reserve
    * @param interestRateStrategyAddress The address of the interest rate strategy contract
    **/
   function initReserve(
     address asset,
-    address aTokenAddress,
+    address mTokenAddress,
     address stableDebtAddress,
     address variableDebtAddress,
     address interestRateStrategyAddress
@@ -583,14 +583,14 @@ interface IPool {
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
 
   /**
-   * @notice Validates and finalizes an aToken transfer
-   * @dev Only callable by the overlying aToken of the `asset`
-   * @param asset The address of the underlying asset of the aToken
-   * @param from The user from which the aTokens are transferred
-   * @param to The user receiving the aTokens
+   * @notice Validates and finalizes an mToken transfer
+   * @dev Only callable by the overlying mToken of the `asset`
+   * @param asset The address of the underlying asset of the mToken
+   * @param from The user from which the mTokens are transferred
+   * @param to The user receiving the mTokens
    * @param amount The amount being transferred/withdrawn
-   * @param balanceFromBefore The aToken balance of the `from` user before the transfer
-   * @param balanceToBefore The aToken balance of the `to` user before the transfer
+   * @param balanceFromBefore The mToken balance of the `from` user before the transfer
+   * @param balanceToBefore The mToken balance of the `to` user before the transfer
    */
   function finalizeTransfer(
     address asset,
@@ -629,7 +629,7 @@ interface IPool {
 
   /**
    * @notice Updates flash loan premiums. Flash loan premium consists of two parts:
-   * - A part is sent to aToken holders as extra, one time accumulated interest
+   * - A part is sent to mToken holders as extra, one time accumulated interest
    * - A part is collected by the protocol treasury
    * @dev The total premium is calculated on the total borrowed amount
    * @dev The premium to protocol is calculated on the total premium, being a percentage of `flashLoanPremiumTotal`
@@ -709,7 +709,7 @@ interface IPool {
   function MAX_NUMBER_RESERVES() external view returns (uint16);
 
   /**
-   * @notice Mints the assets accrued through the reserve factor to the treasury in the form of aTokens
+   * @notice Mints the assets accrued through the reserve factor to the treasury in the form of mTokens
    * @param assets The list of reserves for which the minting needs to be executed
    **/
   function mintToTreasury(address[] calldata assets) external;
@@ -727,13 +727,13 @@ interface IPool {
   ) external;
 
   /**
-   * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying aTokens.
+   * @notice Supplies an `amount` of underlying asset into the reserve, receiving in return overlying mTokens.
    * - E.g. User supplies 100 USDC and gets in return 100 aUSDC
    * @dev Deprecated: Use the `supply` function instead
    * @param asset The address of the underlying asset to supply
    * @param amount The amount to be supplied
-   * @param onBehalfOf The address that will receive the aTokens, same as msg.sender if the user
-   *   wants to receive them on his own wallet, or a different address if the beneficiary of aTokens
+   * @param onBehalfOf The address that will receive the mTokens, same as msg.sender if the user
+   *   wants to receive them on his own wallet, or a different address if the beneficiary of mTokens
    *   is a different wallet
    * @param referralCode Code used to register the integrator originating the operation, for potential rewards.
    *   0 if the action is executed directly by the user, without any middle-man

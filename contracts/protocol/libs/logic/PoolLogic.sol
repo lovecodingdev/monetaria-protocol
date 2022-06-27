@@ -42,7 +42,7 @@ library PoolLogic {
   ) external returns (bool) {
     require(Address.isContract(params.asset), Errors.NOT_CONTRACT);
     reservesData[params.asset].init(
-      params.aTokenAddress,
+      params.mTokenAddress,
       params.stableDebtAddress,
       params.variableDebtAddress,
       params.interestRateStrategyAddress
@@ -81,7 +81,7 @@ library PoolLogic {
   }
 
   /**
-   * @notice Mints the assets accrued through the reserve factor to the treasury in the form of aTokens
+   * @notice Mints the assets accrued through the reserve factor to the treasury in the form of mTokens
    * @param reservesData The state of all the reserves
    * @param assets The list of reserves for which the minting needs to be executed
    **/
@@ -105,7 +105,7 @@ library PoolLogic {
         reserve.accruedToTreasury = 0;
         uint256 normalizedIncome = reserve.getNormalizedIncome();
         uint256 amountToMint = accruedToTreasury.rayMul(normalizedIncome);
-        IMToken(reserve.aTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
+        IMToken(reserve.mTokenAddress).mintToTreasury(amountToMint, normalizedIncome);
 
         emit MintedToTreasury(assetAddress, amountToMint);
       }

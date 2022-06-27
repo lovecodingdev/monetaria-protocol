@@ -70,7 +70,7 @@ library ValidationLogic {
     uint256 supplyCap = reserveCache.reserveConfig.getSupplyCap();
     require(
       supplyCap == 0 ||
-        (IMToken(reserveCache.aTokenAddress).scaledTotalSupply().rayMul(
+        (IMToken(reserveCache.mTokenAddress).scaledTotalSupply().rayMul(
           reserveCache.nextLiquidityIndex
         ) + amount) <=
         supplyCap * (10**reserveCache.reserveConfig.getDecimals()),
@@ -271,11 +271,11 @@ library ValidationLogic {
       require(
         !params.userConfig.isUsingAsCollateral(reservesData[params.asset].id) ||
           params.reserveCache.reserveConfig.getLtv() == 0 ||
-          params.amount > IERC20(params.reserveCache.aTokenAddress).balanceOf(params.userAddress),
+          params.amount > IERC20(params.reserveCache.mTokenAddress).balanceOf(params.userAddress),
         Errors.COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
 
-      vars.availableLiquidity = IERC20(params.asset).balanceOf(params.reserveCache.aTokenAddress);
+      vars.availableLiquidity = IERC20(params.asset).balanceOf(params.reserveCache.mTokenAddress);
 
       //calculate the max available loan size in stable rate mode as a percentage of the
       //available liquidity
@@ -388,7 +388,7 @@ library ValidationLogic {
       require(
         !userConfig.isUsingAsCollateral(reserve.id) ||
           reserveCache.reserveConfig.getLtv() == 0 ||
-          stableDebt + variableDebt > IERC20(reserveCache.aTokenAddress).balanceOf(msg.sender),
+          stableDebt + variableDebt > IERC20(reserveCache.mTokenAddress).balanceOf(msg.sender),
         Errors.COLLATERAL_SAME_AS_BORROWING_CURRENCY
       );
     } else {
@@ -428,7 +428,7 @@ library ValidationLogic {
           averageStableBorrowRate: 0,
           reserveFactor: reserveCache.reserveFactor,
           reserve: reserveAddress,
-          aToken: reserveCache.aTokenAddress
+          mToken: reserveCache.mTokenAddress
         })
       );
 
@@ -589,7 +589,7 @@ library ValidationLogic {
    * @param eModeCategories The config of all the efficiency mode categories
    * @param userConfig The state of the user for the specific reserve
    * @param asset The asset for which the ltv will be validated
-   * @param from The user from which the aTokens are being transferred
+   * @param from The user from which the mTokens are being transferred
    * @param reservesCount The number of available reserves
    * @param oracle The price oracle
    * @param userEModeCategory The users active efficiency mode category
@@ -650,7 +650,7 @@ library ValidationLogic {
       IERC20(reserve.variableDebtTokenAddress).totalSupply() == 0,
       Errors.VARIABLE_DEBT_SUPPLY_NOT_ZERO
     );
-    require(IERC20(reserve.aTokenAddress).totalSupply() == 0, Errors.ATOKEN_SUPPLY_NOT_ZERO);
+    require(IERC20(reserve.mTokenAddress).totalSupply() == 0, Errors.MTOKEN_SUPPLY_NOT_ZERO);
   }
 
   /**
@@ -703,7 +703,7 @@ library ValidationLogic {
    * @notice Validates if an asset can be activated as collateral in the following actions: supply, transfer,
    * set as collateral, mint unbacked, and liquidate
    * @dev This is used to ensure that the constraints for isolated assets are respected by all the actions that
-   * generate transfers of aTokens
+   * generate transfers of mTokens
    * @param reservesData The state of all the reserves
    * @param reservesList The addresses of all the active reserves
    * @param userConfig the user config

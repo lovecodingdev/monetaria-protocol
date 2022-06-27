@@ -43,7 +43,7 @@ library BorrowLogic {
     address indexed user,
     address indexed repayer,
     uint256 amount,
-    bool useATokens
+    bool useMTokens
   );
   event RebalanceStableBorrowRate(address indexed reserve, address indexed user);
   event SwapBorrowRateMode(
@@ -150,7 +150,7 @@ library BorrowLogic {
     );
 
     if (params.releaseUnderlying) {
-      IMToken(reserveCache.aTokenAddress).transferUnderlyingTo(params.user, params.amount);
+      IMToken(reserveCache.mTokenAddress).transferUnderlyingTo(params.user, params.amount);
     }
 
     emit Borrow(
@@ -167,7 +167,7 @@ library BorrowLogic {
   }
 
   /**
-   * @notice Implements the repay feature. Repaying transfers the underlying back to the aToken and clears the
+   * @notice Implements the repay feature. Repaying transfers the underlying back to the mToken and clears the
    * equivalent amount of debt for the user by burning the corresponding debt token. For isolated positions, it also
    * reduces the isolated debt.
    * @dev  Emits the `Repay()` event
@@ -205,9 +205,9 @@ library BorrowLogic {
       ? stableDebt
       : variableDebt;
 
-    // Allows a user to repay with aTokens without leaving dust from interest.
-    if (params.useATokens && params.amount == type(uint256).max) {
-      params.amount = IMToken(reserveCache.aTokenAddress).balanceOf(msg.sender);
+    // Allows a user to repay with mTokens without leaving dust from interest.
+    if (params.useMTokens && params.amount == type(uint256).max) {
+      params.amount = IMToken(reserveCache.mTokenAddress).balanceOf(msg.sender);
     }
 
     if (params.amount < paybackAmount) {
@@ -227,7 +227,7 @@ library BorrowLogic {
     reserve.updateInterestRates(
       reserveCache,
       params.asset,
-      params.useATokens ? 0 : paybackAmount,
+      params.useMTokens ? 0 : paybackAmount,
       0
     );
 
@@ -243,19 +243,19 @@ library BorrowLogic {
       paybackAmount
     );
 
-    if (params.useATokens) {
-      IMToken(reserveCache.aTokenAddress).burn(
+    if (params.useMTokens) {
+      IMToken(reserveCache.mTokenAddress).burn(
         msg.sender,
-        reserveCache.aTokenAddress,
+        reserveCache.mTokenAddress,
         paybackAmount,
         reserveCache.nextLiquidityIndex
       );
     } else {
-      IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.aTokenAddress, paybackAmount);
-      IMToken(reserveCache.aTokenAddress).handleRepayment(msg.sender, paybackAmount);
+      IERC20(params.asset).safeTransferFrom(msg.sender, reserveCache.mTokenAddress, paybackAmount);
+      IMToken(reserveCache.mTokenAddress).handleRepayment(msg.sender, paybackAmount);
     }
 
-    emit Repay(params.asset, params.onBehalfOf, msg.sender, paybackAmount, params.useATokens);
+    emit Repay(params.asset, params.onBehalfOf, msg.sender, paybackAmount, params.useMTokens);
 
     return paybackAmount;
   }
