@@ -18,10 +18,10 @@ contract BaseImmutableAdminUpgradeabilityProxy is BaseUpgradeabilityProxy {
 
   /**
    * @dev Constructor.
-   * @param adm The address of the admin
+   * @param admin_ The address of the admin
    */
-  constructor(address adm) {
-    _admin = adm;
+  constructor(address admin_) {
+    _admin = admin_;
   }
 
   modifier ifAdmin() {
