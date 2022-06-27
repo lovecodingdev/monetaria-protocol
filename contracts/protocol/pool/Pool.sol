@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.9;
 
 import {VersionedInitializable} from '../libs/upgradeability/VersionedInitializable.sol';
 import {Errors} from '../libs/helpers/Errors.sol';

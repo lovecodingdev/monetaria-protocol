@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.9;
 
 import {IMonetariaIncentivesController} from '../../../interfaces/IMonetariaIncentivesController.sol';
 import {IPool} from '../../../interfaces/IPool.sol';

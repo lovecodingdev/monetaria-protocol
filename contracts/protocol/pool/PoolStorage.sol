@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.9;
 
 import {UserConfig} from '../libs/config/UserConfig.sol';
 import {ReserveConfig} from '../libs/config/ReserveConfig.sol';
