@@ -6,8 +6,8 @@ import {DataTypes} from '../protocol/libs/types/DataTypes.sol';
 
 /**
  * @title IPool
- * @author Aave
- * @notice Defines the basic interface for an Aave Pool.
+ * @author Monetaria
+ * @notice Defines the basic interface for an Monetaria Pool.
  **/
 interface IPool {
   /**
@@ -533,33 +533,33 @@ interface IPool {
     external;
 
   /**
-   * @notice Sets the configuration bitmap of the reserve as a whole
+   * @notice Sets the config bitmap of the reserve as a whole
    * @dev Only callable by the PoolConfigurator contract
    * @param asset The address of the underlying asset of the reserve
-   * @param configuration The new configuration bitmap
+   * @param config The new config bitmap
    **/
-  function setConfiguration(address asset, DataTypes.ReserveConfigurationMap calldata configuration)
+  function setConfig(address asset, DataTypes.ReserveConfigMap calldata config)
     external;
 
   /**
-   * @notice Returns the configuration of the reserve
+   * @notice Returns the config of the reserve
    * @param asset The address of the underlying asset of the reserve
-   * @return The configuration of the reserve
+   * @return The config of the reserve
    **/
-  function getConfiguration(address asset)
+  function getConfig(address asset)
     external
     view
-    returns (DataTypes.ReserveConfigurationMap memory);
+    returns (DataTypes.ReserveConfigMap memory);
 
   /**
-   * @notice Returns the configuration of the user across all the reserves
+   * @notice Returns the config of the user across all the reserves
    * @param user The user address
-   * @return The configuration of the user
+   * @return The config of the user
    **/
-  function getUserConfiguration(address user)
+  function getUserConfig(address user)
     external
     view
-    returns (DataTypes.UserConfigurationMap memory);
+    returns (DataTypes.UserConfigMap memory);
 
   /**
    * @notice Returns the normalized income normalized income of the reserve
@@ -576,9 +576,9 @@ interface IPool {
   function getReserveNormalizedVariableDebt(address asset) external view returns (uint256);
 
   /**
-   * @notice Returns the state and configuration of the reserve
+   * @notice Returns the state and config of the reserve
    * @param asset The address of the underlying asset of the reserve
-   * @return The state and configuration data of the reserve
+   * @return The state and config data of the reserve
    **/
   function getReserveData(address asset) external view returns (DataTypes.ReserveData memory);
 
@@ -647,14 +647,14 @@ interface IPool {
    * @dev In eMode, the protocol allows very high borrowing power to borrow assets of the same category.
    * The category 0 is reserved as it's the default for volatile assets
    * @param id The id of the category
-   * @param config The configuration of the category
+   * @param config The config of the category
    */
   function configureEModeCategory(uint8 id, DataTypes.EModeCategory memory config) external;
 
   /**
    * @notice Returns the data of an eMode category
    * @param id The id of the category
-   * @return The configuration data of the category
+   * @return The config data of the category
    */
   function getEModeCategoryData(uint8 id) external view returns (DataTypes.EModeCategory memory);
 

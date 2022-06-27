@@ -5,7 +5,7 @@ import {IPoolAddressesProvider} from './IPoolAddressesProvider.sol';
 
 /**
  * @title IACLManager
- * @author Aave
+ * @author Monetaria
  * @notice Defines the basic interface for the ACL Manager
  **/
 interface IACLManager {

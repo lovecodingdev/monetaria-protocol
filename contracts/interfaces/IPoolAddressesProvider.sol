@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 /**
  * @title IPoolAddressesProvider
- * @author Aave
+ * @author Monetaria
  * @notice Defines the basic interface for a Pool Addresses Provider.
  **/
 interface IPoolAddressesProvider {
@@ -98,7 +98,7 @@ interface IPoolAddressesProvider {
   );
 
   /**
-   * @notice Returns the id of the Aave market to which this contract points to.
+   * @notice Returns the id of the Monetaria market to which this contract points to.
    * @return The market id
    **/
   function getMarketId() external view returns (string memory);
@@ -106,7 +106,7 @@ interface IPoolAddressesProvider {
   /**
    * @notice Associates an id with a specific PoolAddressesProvider.
    * @dev This can be used to create an onchain registry of PoolAddressesProviders to
-   * identify and validate multiple Aave markets.
+   * identify and validate multiple Monetaria markets.
    * @param newMarketId The market id
    */
   function setMarketId(string calldata newMarketId) external;

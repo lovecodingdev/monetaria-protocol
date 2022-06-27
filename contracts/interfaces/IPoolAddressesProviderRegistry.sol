@@ -3,8 +3,8 @@ pragma solidity ^0.8.10;
 
 /**
  * @title IPoolAddressesProviderRegistry
- * @author Aave
- * @notice Defines the basic interface for an Aave Pool Addresses Provider Registry.
+ * @author Monetaria
+ * @notice Defines the basic interface for an Monetaria Pool Addresses Provider Registry.
  **/
 interface IPoolAddressesProviderRegistry {
   /**

@@ -2,13 +2,15 @@
 pragma solidity ^0.8.10;
 
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {IScaledBalanceToken} from './IScaledBalanceToken.sol';
+import {IInitializableMToken} from './IInitializableMToken.sol';
 
 /**
  * @title IMToken
  * @author Monetaria
  * @notice Defines the basic interface for an MToken.
  **/
-interface IMToken is IERC20 {
+interface IMToken is IERC20, IScaledBalanceToken, IInitializableMToken {
   /**
    * @dev Emitted during the transfer action
    * @param from The user whose tokens are being transferred
@@ -115,8 +117,8 @@ interface IMToken is IERC20 {
   function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 
   /**
-   * @notice Returns the address of the Aave treasury, receiving the fees on this aToken.
-   * @return Address of the Aave treasury
+   * @notice Returns the address of the Monetaria treasury, receiving the fees on this aToken.
+   * @return Address of the Monetaria treasury
    **/
   function RESERVE_TREASURY_ADDRESS() external view returns (address);
 
