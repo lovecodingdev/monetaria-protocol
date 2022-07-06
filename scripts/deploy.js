@@ -5,6 +5,19 @@
 // Runtime Environment's members available in the global scope.
 const hre = require("hardhat");
 
+async function deploy(contractName, config, ...params) {
+  var ContractFactory;
+  if (config){
+    ContractFactory = await hre.ethers.getContractFactory(contractName, config);
+  }else{
+    ContractFactory = await hre.ethers.getContractFactory(contractName);
+  }
+  const contract = await ContractFactory.deploy(...params);
+  await contract.deployed();
+  console.log(`${contractName} deployed to: ${contract.address}`);
+  return contract;
+}
+
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -13,53 +26,23 @@ async function main() {
   // manually to make sure everything is compiled
   // await hre.run('compile');
 
-
   // We get the contract to deploy
-  const PoolAddressesProvider = await hre.ethers.getContractFactory("PoolAddressesProvider");
-  const poolAddressesProvider = await PoolAddressesProvider.deploy("Mainnet", "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
-  await poolAddressesProvider.deployed();
-  console.log("PoolAddressesProvider deployed to:", poolAddressesProvider.address);
+  const poolAddressesProvider = await deploy("PoolAddressesProvider", undefined, "Mainnet", "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
 
-  const BorrowLogic = await hre.ethers.getContractFactory("BorrowLogic");
-  const borrowLogic = await BorrowLogic.deploy();
-  await borrowLogic.deployed();
-  console.log("BorrowLogic deployed to:", borrowLogic.address);
-
-  const BridgeLogic = await hre.ethers.getContractFactory("BridgeLogic");
-  const bridgeLogic = await BridgeLogic.deploy();
-  await bridgeLogic.deployed();
-  console.log("BridgeLogic deployed to:", bridgeLogic.address);
-
-  const EModeLogic = await hre.ethers.getContractFactory("EModeLogic");
-  const eModeLogic = await EModeLogic.deploy();
-  await eModeLogic.deployed();
-  console.log("EModeLogic deployed to:", eModeLogic.address);
-
-  const FlashLoanLogic = await hre.ethers.getContractFactory("FlashLoanLogic", {
+  const supplyLogic = await deploy("SupplyLogic");
+  const borrowLogic = await deploy("BorrowLogic");
+  const bridgeLogic = await deploy("BridgeLogic");
+  const eModeLogic = await deploy("EModeLogic");
+  const flashLoanLogic = await deploy("FlashLoanLogic", {
     libraries: {
       BorrowLogic: borrowLogic.address,
     }
   });
-  const flashLoanLogic = await FlashLoanLogic.deploy();
-  await flashLoanLogic.deployed();
-  console.log("FlashLoanLogic deployed to:", flashLoanLogic.address);
+  const liquidationLogic = await deploy("LiquidationLogic");
+  const poolLogic = await deploy("PoolLogic");
+  const configuratorLogic = await deploy("ConfiguratorLogic");
 
-  const LiquidationLogic = await hre.ethers.getContractFactory("LiquidationLogic");
-  const liquidationLogic = await LiquidationLogic.deploy();
-  await liquidationLogic.deployed();
-  console.log("LiquidationLogic deployed to:", liquidationLogic.address);
-
-  const PoolLogic = await hre.ethers.getContractFactory("PoolLogic");
-  const poolLogic = await PoolLogic.deploy();
-  await poolLogic.deployed();
-  console.log("PoolLogic deployed to:", poolLogic.address);
-
-  const SupplyLogic = await hre.ethers.getContractFactory("SupplyLogic");
-  const supplyLogic = await SupplyLogic.deploy();
-  await supplyLogic.deployed();
-  console.log("SupplyLogic deployed to:", supplyLogic.address);
-
-  const Pool = await hre.ethers.getContractFactory("Pool", {
+  const pool = await deploy("Pool", {
     libraries: {
       BorrowLogic: borrowLogic.address,
       BridgeLogic: bridgeLogic.address,
@@ -69,37 +52,19 @@ async function main() {
       PoolLogic: poolLogic.address,
       SupplyLogic: supplyLogic.address,
     }
+  }, poolAddressesProvider.address);
+
+  const poolConfigurator = await deploy("PoolConfigurator", {
+    libraries: {
+      ConfiguratorLogic: configuratorLogic.address,
+    }
   });
-  const pool = await Pool.deploy(poolAddressesProvider.address);
-  await pool.deployed();
-  console.log("Pool deployed to:", pool.address, await pool.ADDRESSES_PROVIDER());
 
   await poolAddressesProvider.setPoolImpl(pool.address);
   console.log("AddressesProvider Pool: ", await poolAddressesProvider.getPool());
 
-  var poolContract = await Pool.attach(await poolAddressesProvider.getPool());
-  console.log("Pool getRevision: ", poolContract.address, await poolContract.POOL_REVISION());
-  
-  const Pool2 = await hre.ethers.getContractFactory("Pool2", {
-    libraries: {
-      BorrowLogic: borrowLogic.address,
-      BridgeLogic: bridgeLogic.address,
-      EModeLogic: eModeLogic.address,
-      FlashLoanLogic: flashLoanLogic.address,
-      LiquidationLogic: liquidationLogic.address,
-      PoolLogic: poolLogic.address,
-      SupplyLogic: supplyLogic.address,
-    }
-  });
-  const pool2 = await Pool2.deploy(poolAddressesProvider.address);
-  await pool2.deployed();
-  console.log("Pool2 deployed to:", pool2.address, await pool2.ADDRESSES_PROVIDER());
-
-  await poolAddressesProvider.setPoolImpl(pool2.address);
-  console.log("AddressesProvider Pool: ", await poolAddressesProvider.getPool());
-
-  poolContract = await Pool.attach(await poolAddressesProvider.getPool());
-  console.log("Pool getRevision: ", poolContract.address, await poolContract.POOL_REVISION());
+  await poolAddressesProvider.setPoolConfiguratorImpl(poolConfigurator.address);
+  console.log("AddressesProvider PoolConfigurator: ", await poolAddressesProvider.getPoolConfigurator());
 
 }
 
