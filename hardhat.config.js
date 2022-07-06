@@ -25,4 +25,14 @@ module.exports = {
     },
     evmVersion: 'london',
   },
+  networks: {
+    localhost: {
+      allowUnlimitedContractSize: true,
+    },
+    hardhat: {
+      allowUnlimitedContractSize: true,
+      gasPrice: 20000000000,
+      gas: 6000000,
+    },
+  },
 };
