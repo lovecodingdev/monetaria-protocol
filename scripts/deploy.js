@@ -26,8 +26,9 @@ async function main() {
   // manually to make sure everything is compiled
   // await hre.run('compile');
 
-  // We get the contract to deploy
-  const poolAddressesProvider = await deploy("PoolAddressesProvider", undefined, "Mainnet", "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266");
+  const signer = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+
+  const poolAddressesProvider = await deploy("PoolAddressesProvider", undefined, "Mainnet", signer);
 
   const supplyLogic = await deploy("SupplyLogic");
   const borrowLogic = await deploy("BorrowLogic");
@@ -60,11 +61,19 @@ async function main() {
     }
   });
 
+  await poolAddressesProvider.setACLAdmin(signer);
+  console.log("AddressesProvider ACLAdmin: ", await poolAddressesProvider.getACLAdmin());
+
+  const aclManager = await deploy("ACLManager", undefined, poolAddressesProvider.address);
+
   await poolAddressesProvider.setPoolImpl(pool.address);
   console.log("AddressesProvider Pool: ", await poolAddressesProvider.getPool());
 
   await poolAddressesProvider.setPoolConfiguratorImpl(poolConfigurator.address);
   console.log("AddressesProvider PoolConfigurator: ", await poolAddressesProvider.getPoolConfigurator());
+
+  await poolAddressesProvider.setACLManager(aclManager.address);
+  console.log("AddressesProvider ACLManager: ", await poolAddressesProvider.getACLManager());
 
 }
 
