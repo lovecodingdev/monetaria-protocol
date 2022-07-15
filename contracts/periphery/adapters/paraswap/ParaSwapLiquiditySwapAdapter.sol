@@ -177,7 +177,7 @@ contract ParaSwapLiquiditySwapAdapter is BaseParaSwapSellAdapter, ReentrancyGuar
       require(balanceToSwap <= amountToSwap, 'INSUFFICIENT_AMOUNT_TO_SWAP');
       amountToSwap = balanceToSwap;
     } else {
-      require(balance >= amountToSwap.add(premium), 'INSUFFICIENT_ATOKEN_BALANCE');
+      require(balance >= amountToSwap.add(premium), 'INSUFFICIENT_MToken_BALANCE');
     }
 
     uint256 amountReceived = _sellOnParaSwap(

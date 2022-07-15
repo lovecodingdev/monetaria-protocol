@@ -31,7 +31,7 @@ async function deployMockOracle(){
 
 const TokenContractId = {
   DAI: 'DAI',
-  AAVE: 'AAVE',
+  MONETARIA: 'MONETARIA',
   TUSD: 'TUSD',
   BAT: 'BAT',
   WETH: 'WETH',
