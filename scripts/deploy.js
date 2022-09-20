@@ -5,6 +5,7 @@
 // Runtime Environment's members available in the global scope.
 const hre = require("hardhat");
 const { BigNumber, utils } = require('ethers');
+const { ethers } = require("hardhat");
 
 const GRACE_PERIOD = BigNumber.from(60 * 60);
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -72,7 +73,8 @@ async function deploy(contractName, {config, params = [], wait = AVG_BLOCK_TIME,
   }else{
     contract = await ContractFactory.deploy(...params);
     await contract.deployed();
-    await sleep(wait);
+    await contract.deployTransaction.wait();
+    // await sleep(wait);
     DEPLOYED[deployedKey] = contract.address;
     console.log(`${deployedKey} deployed to: ${contract.address}`);
   }
@@ -150,7 +152,8 @@ async function main() {
 
   const [signer] = await ethers.getSigners();
   const DEPLOYER = signer.address;
-  console.log({DEPLOYER});
+
+  let tx;
 
   const poolAddressesProvider = await deploy("PoolAddressesProvider", {
     params: ["ETH_Goerli", DEPLOYER]
@@ -158,8 +161,8 @@ async function main() {
   const poolAddressesProviderRegistry = await deploy("PoolAddressesProviderRegistry", {
     params: [DEPLOYER]
   });
-  await poolAddressesProviderRegistry.registerAddressesProvider(poolAddressesProvider.address, 1);
-  await sleep(AVG_BLOCK_TIME);
+  tx = await poolAddressesProviderRegistry.registerAddressesProvider(poolAddressesProvider.address, 1);
+  await tx.wait();
 
   const supplyLogic = await deploy("SupplyLogic");
   const borrowLogic = await deploy("BorrowLogic");
@@ -190,8 +193,8 @@ async function main() {
     }, 
     params: [poolAddressesProvider.address]
   });
-  await poolAddressesProvider.setPoolImpl(pool.address);
-  await sleep(AVG_BLOCK_TIME);
+  tx = await poolAddressesProvider.setPoolImpl(pool.address);
+  await tx.wait();
   console.log("AddressesProvider Pool: ", await poolAddressesProvider.getPool());
 
   const poolConfigurator = await deploy("PoolConfigurator", {
@@ -201,62 +204,77 @@ async function main() {
       }
     }
   });
-  await poolAddressesProvider.setPoolConfiguratorImpl(poolConfigurator.address);
-  await sleep(AVG_BLOCK_TIME);
+  tx = await poolAddressesProvider.setPoolConfiguratorImpl(poolConfigurator.address);
+  await tx.wait();
   console.log("AddressesProvider PoolConfigurator: ", await poolAddressesProvider.getPoolConfigurator());
 
   let {priceOracle, sequencerOracle} = await deployMockOracle(DEPLOYER);
-  await poolAddressesProvider.setPriceOracle(priceOracle.address);
-  await sleep(AVG_BLOCK_TIME);
-  console.log("AddressesProvider PriceOracle: ", await poolAddressesProvider.getPriceOracle());
 
-  await poolAddressesProvider.setACLAdmin(DEPLOYER);
-  await sleep(AVG_BLOCK_TIME);
+  tx = await poolAddressesProvider.setACLAdmin(DEPLOYER);
+  await tx.wait();
   console.log("AddressesProvider ACLAdmin: ", await poolAddressesProvider.getACLAdmin());
 
   const aclManager = await deploy("ACLManager", {
     params: [poolAddressesProvider.address]
   });
-  await poolAddressesProvider.setACLManager(aclManager.address);
-  await sleep(AVG_BLOCK_TIME);
+  tx = await poolAddressesProvider.setACLManager(aclManager.address);
+  await tx.wait();
   console.log("AddressesProvider ACLManager: ", await poolAddressesProvider.getACLManager());
 
   const priceOracleSentinel = await deploy("PriceOracleSentinel", {
     params: [poolAddressesProvider.address, sequencerOracle.address, GRACE_PERIOD]
   });
-  await poolAddressesProvider.setPriceOracleSentinel(priceOracleSentinel.address);
-  await sleep(AVG_BLOCK_TIME);
+  tx = await poolAddressesProvider.setPriceOracleSentinel(priceOracleSentinel.address);
+  await tx.wait();
   console.log("AddressesProvider PriceOracleSentinel: ", await poolAddressesProvider.getPriceOracleSentinel());
 
   const poolDataProvider = await deploy("MonetariaProtocolDataProvider", {
     params: [poolAddressesProvider.address]
   });
-  await poolAddressesProvider.setPoolDataProvider(poolDataProvider.address);
-  await sleep(AVG_BLOCK_TIME);
+  tx = await poolAddressesProvider.setPoolDataProvider(poolDataProvider.address);
+  await tx.wait();
   console.log("AddressesProvider PoolDataProvider: ", await poolAddressesProvider.getPoolDataProvider());
 
   const mockTokens = await deployAllMockTokens();
-  await sleep(AVG_BLOCK_TIME);
 
   const monetariaOracle = await deploy("MonetariaOracle", {
     params: [
       poolAddressesProvider.address, 
-      [], 
-      [], 
-      priceOracle.address, 
-      mockTokens.tokens.WETH.address, 
-      BigNumber.from(""+10**18)
+      [
+        mockTokens.tokens.MNT.address,
+        mockTokens.tokens.WETH.address,
+        mockTokens.tokens.USDC.address,
+        mockTokens.tokens.WBTC.address,
+      ], 
+      [
+        mockTokens.tokenAggregators.MNT.address,
+        mockTokens.tokenAggregators.WETH.address,
+        mockTokens.tokenAggregators.USDC.address,
+        mockTokens.tokenAggregators.WBTC.address,
+      ], 
+      ZERO_ADDRESS, 
+      ZERO_ADDRESS, 
+      1
     ]
   });
+  tx = await poolAddressesProvider.setPriceOracle(monetariaOracle.address);
+  await tx.wait();
+  console.log("AddressesProvider PriceOracle: ", await poolAddressesProvider.getPriceOracle());
 
   const wethGateway = await deploy("WETHGateway", {
-    params: [mockTokens.tokens.WETH.address, DEPLOYER]
+    params: [
+      mockTokens.tokens.WETH.address, 
+      DEPLOYER
+    ]
   });
 
   const walletBalanceProvider = await deploy("WalletBalanceProvider");
 
   const uiPoolDataProviderV3 = await deploy("UiPoolDataProviderV3", {
-    params: [mockTokens.tokenAggregators.WETH.address, mockTokens.tokenAggregators.WETH.address]
+    params: [
+      mockTokens.tokenAggregators.WETH.address, 
+      mockTokens.tokenAggregators.WETH.address
+    ]
   });
 
   const uiIncentiveDataProviderV3 = await deploy("UiIncentiveDataProviderV3");
@@ -270,8 +288,21 @@ async function main() {
     params:[emissionManager.address]
   });
   await emissionManager.setRewardsController(rewardsController.address);
-  await sleep(AVG_BLOCK_TIME);
+  await tx.wait();
   console.log("EmissionManager RewardsController: ", await emissionManager.getRewardsController());
+
+  const reservesSetupHelper = await deploy("ReservesSetupHelper");
+  const reserveInterestRateStrategy = await deploy("DefaultReserveInterestRateStrategy", {
+    params: [poolAddressesProvider.address, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  });
+
+  tx = await aclManager.addAssetListingAdmin(DEPLOYER);
+  await tx.wait();
+  console.log("ACLManager AssetListingAdmin: ", DEPLOYER, await aclManager.isAssetListingAdmin(DEPLOYER));
+
+  tx = await aclManager.addRiskAdmin(reservesSetupHelper.address);
+  await tx.wait();
+  console.log("ACLManager RiskAdmin: ", reservesSetupHelper.address, await aclManager.isRiskAdmin(reservesSetupHelper.address));
 
   console.log({DEPLOYED});
 }

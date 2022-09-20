@@ -1,4 +1,17 @@
 const hre = require("hardhat");
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+async function verify(params) {
+  try {
+    await hre.run("verify:verify", params);
+  } catch (error) {
+    if(String(error).includes("already verified")){
+      console.log(`${params.address} is already verified.`);
+    }else{
+      console.log(error)
+    }
+  }
+}
 
 async function main() {
   const [ signer ] = await ethers.getSigners();
@@ -8,133 +21,171 @@ async function main() {
   const poolAddressesProviderRegistry = "0x87Aebc6809c8e2CB7370ef6dac47e604EDd0065c";
   const monetariaProtocolDataProvider = "0xaD1d03B474B143856c1E522d3e3B1909107e3b40";
   const aclManager = "0x0A9d17f3aB363f6Ee5e51EF48d0ccE40F98F72B2";
-  const btcpxToken = "0x9D51a697f82DBaEfe09C34dc0c3F7e94b960ddA8";
-  const usdcToken = "0x8f75DB6A17c05391b6D9918eBE8B1F895a3e3900";
-  const prxyToken = "0x97F09A382700320f41d97DFBc3b730E0D70e7a04";
+  const poolConfiguratorImpl = "0x05184AeC80cA506Df14a876B46405FC35c42143A";
+  const poolConfigurator = "0xea73e15b51723ba7ef9e71fbd4265172656101ee";
 
-  const btcpxAggregator = "0x1E7E7e51de6E425B0778abbDa2794C0E418CE166";
-  const usdcAggregator = "0x68C25f8671ab0efCe98739fc19016356d3065359";
-  const prxyAggregator = "0x06AF38D21399720b9181986F8eaa50c329dD3Aaa";
+  const priceOracle = "0x69f6b5FeEC2F5F39f92289dd288F09A7bbc0A200";
+  const monetariaOracle = "0x7f317b397120Dca9a8eC99FaB161843d8b7a51D2";
 
-  const aaveOracle = "0x1631CDd670e9c3D7a1f3a5483C9666dAe2746d30";
-  const configuratorLogic = "0x116C4F5048bFcce38E59c7d5DC560Ac007176847";
-  const liquidationLogic = "0x828664116459DBB70d0cb5c3DBcF5698B7288Ad4";
-  const borrowLogic = "0x26D0995F20f50E567011E389F3945d6f17A4b456";
-  const supplyLogic = "0xb3195F7581F7ef066e1bF4AAf6aB5011b8eD6B33";
-  const poolLogic = "0x7dF5a97217f33056A126E6eb9a12dc7C522c023d";
-  const particularLogic = "0xfD6c56803DbE87094859A6Dd3BDb712A2C87BAe5";
-
-  const poolImpl = "0xFd9254e84666b10Eee9E6dEE0Fe6c3333e63D373";
-  const pool = "0xd0aEe99E12219bA64CD2bf3dD17e04669405356F";
-  const poolConfiguratorImpl = "0x0637e976c42bED5182A8000035d9B25466f41Cc3";
-  const poolConfigurator = "0x2B39A38dB049D1cb1C22adb7cA234aaEce80ffbD";
-  const prxyTreasury = "0x6937971ab637E14A994290C68e890FDDd10E4110";
-  const pTokenImpl = "0x5ebF44771aC95C023132789a261Ab707493e5d51";
-  const reservesSetupHelper = "0x499eFDad9aca7323894790B1350d0aecf3E5dD0d";
-
-  // await hre.run("verify:verify", {
-  //   address: poolAddressesProvider,
-  //   constructorArguments: [
-  //     "ETH_Goerli",
-  //     DEPLOYER,
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: poolAddressesProviderRegistry,
-  //   constructorArguments: [
-  //     DEPLOYER,
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: monetariaProtocolDataProvider,
-  //   constructorArguments: [
-  //     poolAddressesProvider
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: aclManager,
-  //   constructorArguments: [
-  //     poolAddressesProvider
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: aaveOracle,
-  //   constructorArguments: [
-  //     poolAddressesProvider,
-  //     [ btcpxToken, usdcToken ],
-  //     [ btcpxAggregator, usdcAggregator ],
-  //     "0x0000000000000000000000000000000000000000",
-  //     "0x0000000000000000000000000000000000000000",
-  //     0
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: particularLogic,
-  //   constructorArguments: [
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: liquidationLogic,
-  //   constructorArguments: [
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: borrowLogic,
-  //   constructorArguments: [
-  //   ]
-  // })
-
-  // await hre.run("verify:verify", {
-  //   address: supplyLogic,
-  //   constructorArguments: [
-  //   ]
-  // })
+  const configuratorLogic = "0x9FF84701981Afa8f16b856dBcd6DEEF5421AEd8B";
+  const liquidationLogic = "0xE6d2C61487194148dB78669E87A5653c64E33419";
+  const borrowLogic = "0x9D8CA1671d4DfD02e4090af4fa1A92bd148717A1";
+  const supplyLogic = "0x19Be61f8Ab6E1BB2634d82F7800BcF9c91c7Ca92";
+  const poolLogic = "0x5572E5EB1dCdA4101Db6178DB275369160d7D002";
+  const bridgeLogic = '0x7e6867c13CF89c4253a52B628ee32Cbc84a7e09e';
+  const eModeLogic = '0x03a946A0B832E79f090D3bfDa733FbC14742E2Aa';
+  const flashLoanLogic = '0xcd041E7fA59436adDB80Cc1A883663d860695903';
   
-  // await hre.run("verify:verify", {
-  //   address: poolLogic,
-  //   constructorArguments: [
-  //   ]
-  // })
+  const poolImpl = "0xD84353DE3aa9edAA50442f987A027CDf58d1f8da";
+  const pool = "0xb7d086dcbc9ceca5479d64e8168eeaf3aa74782a";
 
-  // await hre.run("verify:verify", {
-  //   address: poolImpl,
-  //   constructorArguments: [
-  //     poolAddressesProvider
-  //   ]
-  // })
+  const reservesSetupHelper = "0x0207977fb4b34f4C943D2274114947FFA3973dBc";
 
-  // await hre.run("verify:verify", {
-  //   address: pool,
-  //   constructorArguments: [
-  //     poolAddressesProvider
-  //   ]
-  // })
+  const wETHGateway = '0x301fd6DC1fEb455a38575C1610D033836C90A720';
+  const walletBalanceProvider = '0xDE620449A1896fBDF532A9a05618C8047C0CC020';
+  const uiPoolDataProviderV3 = '0x41e3057c29D12bdf0f4cceE00883504767ed6db9';
+  const uiIncentiveDataProviderV3 = '0x25c5Fa5e212bd834eC3839ac2c451Ed3927c8363';
+  
+  await verify({
+    address: poolAddressesProvider,
+    constructorArguments: [
+      "ETH_Goerli",
+      DEPLOYER,
+    ]
+  })
 
-  // await hre.run("verify:verify", {
-  //   address: poolConfiguratorImpl,
-  //   constructorArguments: [
-  //   ]
-  // })
+  await verify({
+    address: poolAddressesProviderRegistry,
+    constructorArguments: [
+      DEPLOYER,
+    ]
+  })
 
-  // await hre.run("verify:verify", {
-  //   address: pTokenImpl,
-  //   constructorArguments: [
-  //     pool
-  //   ]
-  // })
+  await verify({
+    address: monetariaProtocolDataProvider,
+    constructorArguments: [
+      poolAddressesProvider
+    ]
+  })
 
-  // await hre.run("verify:verify", {
-  //   address: reservesSetupHelper,
-  //   constructorArguments: [
-  //   ]
-  // })
+  await verify({
+    address: aclManager,
+    constructorArguments: [
+      poolAddressesProvider
+    ]
+  })
+
+  await verify({
+    address: poolConfiguratorImpl,
+    constructorArguments: [
+    ]
+  })
+
+  await verify({
+    address: poolConfigurator,
+    constructorArguments: [
+      poolAddressesProvider
+    ]
+  })
+
+  await verify({
+    address: monetariaOracle,
+    constructorArguments: [
+      poolAddressesProvider,
+      [
+        '0x151AC69b7aef24b8E8dbE2c9aB7E4296569272f8',
+        '0xE9c504aF8154995bdB94e8D3b6871c2fFC76De83',
+        '0x4bfc328FfbAf2ac8ae90c90E832B0901aED02B5B',
+        '0x72D6F8ba23aC707408E9dc35d81302d338E383aD',
+      ], 
+      [
+        '0xcC0cF6b84c795ad280934E3Ae4a041144718852f',
+        '0x5B6924b143C571F1a791441fd0d6Fb20F9be51Ca',
+        '0x756b8D6D88d53fDAaBc517Fd3181c3393f2B0D30',
+        '0x25d6fc3C5708f084e1E6543aCDB3792a31799b96',
+      ], 
+      ZERO_ADDRESS,
+      ZERO_ADDRESS,
+      1
+    ]
+  })
+
+  await verify({
+    address: liquidationLogic,
+    constructorArguments: [
+    ]
+  })
+
+  await verify({
+    address: borrowLogic,
+    constructorArguments: [
+    ]
+  })
+
+  await verify({
+    address: supplyLogic,
+    constructorArguments: [
+    ]
+  })
+
+  await verify({
+    address: eModeLogic,
+    constructorArguments: [
+    ]
+  })
+
+  await verify({
+    address: flashLoanLogic,
+    constructorArguments: [
+    ]
+  })
+  
+  await verify({
+    address: configuratorLogic,
+    constructorArguments: [
+    ]
+  })
+  
+  await verify({
+    address: bridgeLogic,
+    constructorArguments: [
+    ]
+  })
+  
+  await verify({
+    address: poolLogic,
+    constructorArguments: [
+    ]
+  })
+
+  await verify({
+    address: poolImpl,
+    constructorArguments: [
+      poolAddressesProvider
+    ]
+  })
+
+  await verify({
+    address: pool,
+    constructorArguments: [
+      poolAddressesProvider
+    ]
+  })
+
+  await verify({
+    address: reservesSetupHelper,
+    constructorArguments: [
+    ]
+  })
+
+  await verify({
+    address: uiPoolDataProviderV3,
+    constructorArguments: [
+      '0x5B6924b143C571F1a791441fd0d6Fb20F9be51Ca',
+      '0x5B6924b143C571F1a791441fd0d6Fb20F9be51Ca',
+    ]
+  })
+
 }
 
 main()
