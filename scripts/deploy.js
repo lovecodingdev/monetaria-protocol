@@ -100,14 +100,15 @@ const TokenContractId = {
   BUSD: 'BUSD',
 }
 
+AGG_DECIMALS = Math.pow(10, 8);
 const TokenPrices = {
-  MNT: 5,
-  WETH: 4000,
-  USDC: 1,
-  USDT: 1,
-  WBTC: 60000,
-  LINK: 10,
-  BUSD: 1,
+  MNT: 5 * AGG_DECIMALS,
+  WETH: 4000 * AGG_DECIMALS,
+  USDC: 1 * AGG_DECIMALS,
+  USDT: 1 * AGG_DECIMALS,
+  WBTC: 60000 * AGG_DECIMALS,
+  LINK: 10 * AGG_DECIMALS,
+  BUSD: 1 * AGG_DECIMALS,
 }
 
 async function deployAllMockTokens () {
@@ -293,7 +294,18 @@ async function main() {
 
   const reservesSetupHelper = await deploy("ReservesSetupHelper");
   const reserveInterestRateStrategy = await deploy("DefaultReserveInterestRateStrategy", {
-    params: [poolAddressesProvider.address, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    params: [
+      poolAddressesProvider.address, 
+      "800000000000000000000000000", 
+      "0", 
+      "40000000000000000000000000", 
+      "750000000000000000000000000", 
+      "5000000000000000000000000", 
+      "750000000000000000000000000", 
+      "10000000000000000000000000", 
+      "80000000000000000000000000", 
+      "200000000000000000000000000"
+    ]
   });
 
   tx = await aclManager.addAssetListingAdmin(DEPLOYER);
@@ -303,6 +315,10 @@ async function main() {
   tx = await aclManager.addRiskAdmin(reservesSetupHelper.address);
   await tx.wait();
   console.log("ACLManager RiskAdmin: ", reservesSetupHelper.address, await aclManager.isRiskAdmin(reservesSetupHelper.address));
+
+  tx = await aclManager.addRiskAdmin(DEPLOYER);
+  await tx.wait();
+  console.log("ACLManager RiskAdmin: ", DEPLOYER, await aclManager.isRiskAdmin(reservesSetupHelper.address));
 
   console.log({DEPLOYED});
 }

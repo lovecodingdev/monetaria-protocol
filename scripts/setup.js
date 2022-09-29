@@ -32,6 +32,29 @@ const TokenContractId = {
   BUSD: 'BUSD',
 }
 
+async function deploy(contractName, {config, params = [], wait = AVG_BLOCK_TIME, key} = {}) {
+  var ContractFactory;
+  if (config){
+    ContractFactory = await hre.ethers.getContractFactory(contractName, config);
+  }else{
+    ContractFactory = await hre.ethers.getContractFactory(contractName);
+  }
+  let contract;
+  let deployedKey = key || contractName;
+  if(DEPLOYED[deployedKey]){
+    contract = await ContractFactory.attach(DEPLOYED[deployedKey]);
+    console.log(`${deployedKey} already deployed to: ${contract.address}`);
+  }else{
+    contract = await ContractFactory.deploy(...params);
+    await contract.deployed();
+    await contract.deployTransaction.wait();
+    // await sleep(wait);
+    DEPLOYED[deployedKey] = contract.address;
+    console.log(`${deployedKey} deployed to: ${contract.address}`);
+  }
+  return contract;
+}
+
 async function deployAllTokens () {
   let tokens = {};
 
@@ -71,6 +94,8 @@ async function main() {
 
   // let tokens = await deployAllTokens();
   // console.log({tokens});
+  const poolAddressesProvider = await hre.ethers.getContractAt("IPoolAddressesProvider", poolAddressesProviderAddress);
+  console.log("PoolAddressesProvider: ", poolAddressesProvider.address);
 
   const poolConfigurator = await hre.ethers.getContractAt("IPoolConfigurator", poolConfiguratorAddress);
   console.log("PoolConfigurator: ", poolConfigurator.address);
@@ -78,39 +103,54 @@ async function main() {
   const reservesSetupHelper = await hre.ethers.getContractAt("ReservesSetupHelper", reservesSetupHelperAddress);
   console.log("ReservesSetupHelper: ", reservesSetupHelper.address);
 
-  // const initInputParams = [
-  //   {
-  //     mTokenImpl: '0x782e7B4578a36637cf05fd38BB32e9bA2F91332c',
-  //     stableDebtTokenImpl: '0xF7822930cE885c8A164B7FbCf311d277D81c2c7e',
-  //     variableDebtTokenImpl: '0xcc638Ad8b8CaBad6Ffa64633F72eD9af463f75f2',
-  //     underlyingAssetDecimals: 18,
-  //     interestRateStrategyAddress: '0x91f78d489a01eD3C9FdEc6C1DA2aC297e010f1c0',
-  //     underlyingAsset: '0x151AC69b7aef24b8E8dbE2c9aB7E4296569272f8',
-  //     treasury: ZERO_ADDRESS,
-  //     incentivesController: ZERO_ADDRESS,
-  //     mTokenName: 'MMNT',
-  //     mTokenSymbol: 'MMNT',
-  //     variableDebtTokenName: 'VMNT',
-  //     variableDebtTokenSymbol: 'VMNT',
-  //     stableDebtTokenName: 'SMNT',
-  //     stableDebtTokenSymbol: 'SMNT',
-  //     params: '0x10',
-  //   },
-  // ];
+  const reserveInterestRateStrategy = await deploy("DefaultReserveInterestRateStrategy", {
+    params: [
+      poolAddressesProvider.address, 
+      "800000000000000000000000000", 
+      "0", 
+      "40000000000000000000000000", 
+      "750000000000000000000000000", 
+      "5000000000000000000000000", 
+      "750000000000000000000000000", 
+      "10000000000000000000000000", 
+      "80000000000000000000000000", 
+      "200000000000000000000000000"
+    ]
+  });
+
+  const initInputParams = [
+    {
+      mTokenImpl: '0x3b3Be494803e11d6D94d9Ad8FEFd672B06bfF3E7',
+      stableDebtTokenImpl: '0x09C1dcb12aE73745Bc5D6Fa878C151797B9AcD28',
+      variableDebtTokenImpl: '0x245750791e9d10B8F968D205e8BcFF9c3788b663',
+      underlyingAssetDecimals: 18,
+      interestRateStrategyAddress: reserveInterestRateStrategy.address,
+      underlyingAsset: '0x72D6F8ba23aC707408E9dc35d81302d338E383aD',
+      treasury: ZERO_ADDRESS,
+      incentivesController: ZERO_ADDRESS,
+      mTokenName: 'MBTC',
+      mTokenSymbol: 'MBTC',
+      variableDebtTokenName: 'VBTC',
+      variableDebtTokenSymbol: 'VBTC',
+      stableDebtTokenName: 'SBTC',
+      stableDebtTokenSymbol: 'SBTC',
+      params: '0x10',
+    },
+  ];
   
-  // let tx;
+  let tx;
 
-  // tx = await poolConfigurator.connect(signer).initReserves(initInputParams);
+  tx = await poolConfigurator.connect(signer).initReserves(initInputParams);
 
-  // try {
-  //   await tx.wait();    
-  // } catch (error) {
+  try {
+    await tx.wait();    
+  } catch (error) {
     
-  // }
+  }
 
   const reserveConfigures = [
     {
-        asset: '0x151AC69b7aef24b8E8dbE2c9aB7E4296569272f8',
+        asset: '0x72D6F8ba23aC707408E9dc35d81302d338E383aD',
         baseLTV: 8500,
         liquidationThreshold: 9000,
         liquidationBonus: 10200,
