@@ -25,7 +25,7 @@ import {ITransferHook} from '../../interfaces/ITransferHook.sol';
  * @author Monetaria
  * @notice Implementation of the Monetaria token
  */
-contract MNTToken is GovernancePowerDelegationERC20, VersionedInitializable {
+contract MNTTokenWithVoting is GovernancePowerDelegationERC20, VersionedInitializable {
   using SafeMath for uint256;
 
   string internal constant NAME = 'Monetaria Token';
