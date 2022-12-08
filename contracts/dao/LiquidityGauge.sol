@@ -148,10 +148,10 @@ contract LiquidityGauge is EIP712 {
   // The goal is to be able to calculate ∫(rate * balance / totalSupply dt) from 0 till checkpoint
   // All values are kept in units of being multiplied by 1e18
   int128 public period;
-  uint256[100000000000000000000000000000] public period_timestamp;
+  mapping(uint256 => uint256) public period_timestamp; // uint256[100000000000000000000000000000] public period_timestamp;
 
   // 1e18 * ∫(rate(t) / totalSupply(t) dt) from 0 till checkpoint
-  uint256[100000000000000000000000000000] integrate_inv_supply;  // bump epoch when rate() changes
+  mapping(uint256 => uint256) integrate_inv_supply; // uint256[100000000000000000000000000000] integrate_inv_supply;  // bump epoch when rate() changes
 
   /**
     @notice Contract constructor
@@ -166,12 +166,12 @@ contract LiquidityGauge is EIP712 {
     future_epoch_time = MNTToken(CRV).future_epoch_time_write();
 
     string memory lp_symbol = ERC20(_lp_token).symbol();
-    string memory name = string.concat("Curve.fi ", lp_symbol, " Gauge Deposit");
+    string memory _name = string(abi.encodePacked("Monetaria ", lp_symbol, " Gauge Deposit"));
 
-    NAME = name;
-    SYMBOL = string.concat(lp_symbol, "-gauge");
+    NAME = _name;
+    SYMBOL = string(abi.encodePacked(lp_symbol, "-gauge"));
     _DOMAIN_SEPARATOR = keccak256(
-        abi.encode(EIP712_TYPEHASH, keccak256(bytes(name)), keccak256(bytes(VERSION)), block.chainid, address(this))
+      abi.encode(EIP712_TYPEHASH, keccak256(bytes(_name)), keccak256(bytes(VERSION)), block.chainid, address(this))
     );
 
     LP_TOKEN = _lp_token;
@@ -211,49 +211,60 @@ contract LiquidityGauge is EIP712 {
   /**
     @notice Claim pending rewards and checkpoint rewards for a user
    */
+  struct CheckPointRewardsVars {
+    uint256 user_balance;
+    address receiver;
+    uint256 _reward_count;
+
+    address token;
+    uint256 integral;
+    uint256 last_update;
+    uint256 duration;
+  }
   function _checkpoint_rewards(address _user, uint256 _total_supply, bool _claim, address _receiver) internal {
-    uint256 user_balance = 0;
-    address receiver = _receiver;
+    CheckPointRewardsVars memory vars;
+    vars.user_balance = 0;
+    vars.receiver = _receiver;
     if (_user != address(0)){
-      user_balance = balanceOf[_user];
+      vars.user_balance = balanceOf[_user];
       if (_claim && _receiver == address(0)) {
         // if receiver is not explicitly declared, check if a default receiver is set
-        receiver = rewards_receiver[_user];
-        if (receiver == address(0)) {
+        vars.receiver = rewards_receiver[_user];
+        if (vars.receiver == address(0)) {
           // if no default receiver is set, direct claims to the user
-          receiver = _user;
+          vars.receiver = _user;
         }
       }
     }
 
-    uint256 _reward_count = reward_count;
+    vars._reward_count = reward_count;
     for (uint i = 0; i < MAX_REWARDS; i++) {
-      if (i == _reward_count){
+      if (i == vars._reward_count){
         break;
       }
-      address token = reward_tokens[i];
+      vars.token = reward_tokens[i];
 
-      uint256 integral = reward_data[token].integral;
-      uint256 last_update = Math.min(block.timestamp, reward_data[token].period_finish);
-      uint256 duration = last_update - reward_data[token].last_update;
-      if (duration != 0) {
-        reward_data[token].last_update = last_update;
+      vars.integral = reward_data[vars.token].integral;
+      vars.last_update = Math.min(block.timestamp, reward_data[vars.token].period_finish);
+      vars.duration = vars.last_update - reward_data[vars.token].last_update;
+      if (vars.duration != 0) {
+        reward_data[vars.token].last_update = vars.last_update;
         if (_total_supply != 0) {
-          integral += duration * reward_data[token].rate * 10**18 / _total_supply;
-          reward_data[token].integral = integral;
+          vars.integral += vars.duration * reward_data[vars.token].rate * 10**18 / _total_supply;
+          reward_data[vars.token].integral = vars.integral;
         }
       }
 
       if (_user != address(0)) {
-        uint256 integral_for = reward_integral_for[token][_user];
+        uint256 integral_for = reward_integral_for[vars.token][_user];
         uint256 new_claimable = 0;
 
-        if (integral_for < integral) {
-          reward_integral_for[token][_user] = integral;
-          new_claimable = user_balance * (integral - integral_for) / 10**18;
+        if (integral_for < vars.integral) {
+          reward_integral_for[vars.token][_user] = vars.integral;
+          new_claimable = vars.user_balance * (vars.integral - integral_for) / 10**18;
         }
 
-        uint256 _claim_data = claim_data[_user][token];
+        uint256 _claim_data = claim_data[_user][vars.token];
         uint256 total_claimable = (_claim_data >> 128) + new_claimable; // shift(claim_data, -128)
         if (total_claimable > 0) {
           uint256 total_claimed = _claim_data % 2**128;
@@ -277,11 +288,11 @@ contract LiquidityGauge is EIP712 {
             // if (success) {
             //   require(response.length > 0);
             // }
-            require(ERC20(token).transfer(receiver, total_claimable));
+            require(ERC20(vars.token).transfer(vars.receiver, total_claimable));
 
-            claim_data[_user][token] = total_claimed + total_claimable;
+            claim_data[_user][vars.token] = total_claimed + total_claimable;
           }else if (new_claimable > 0) {
-            claim_data[_user][token] = total_claimed + (total_claimable << 128);
+            claim_data[_user][vars.token] = total_claimed + (total_claimable << 128);
           }
         }
       }
@@ -741,15 +752,14 @@ contract LiquidityGauge is EIP712 {
   function add_reward(address _reward_token, address _distributor) external {
     require(msg.sender == admin); // dev: only owner
 
-    uint256 reward_count = reward_count;
-    require(reward_count < MAX_REWARDS);
+    uint256 _reward_count = reward_count;
+    require(_reward_count < MAX_REWARDS);
     require(reward_data[_reward_token].distributor == address(0));
 
     reward_data[_reward_token].distributor = _distributor;
-    reward_tokens[reward_count] = _reward_token;
-    reward_count = reward_count + 1;
+    reward_tokens[_reward_count] = _reward_token;
+    reward_count = _reward_count + 1;
   }
-
 
   function set_reward_distributor(address _reward_token, address _distributor) external {
     address current_distributor = reward_data[_reward_token].distributor;
