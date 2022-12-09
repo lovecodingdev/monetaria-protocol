@@ -14,12 +14,6 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import './MNTToken.sol';
 import './VotingEscrow.sol';
 
-interface BoostV1 {
-  function ownerOf(uint256 _token_id) external view returns(address);
-  function token_boost(uint256 _token_id) external view returns(int256);
-  function token_expiry(uint256 _token_id) external view returns(uint256);
-}
-
 /**
  * @title Boost Delegation
  * @author Monetaria
