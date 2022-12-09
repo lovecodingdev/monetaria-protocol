@@ -11,8 +11,9 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
-import {MNTToken} from './MNTToken.sol';
-import {VotingEscrow} from './VotingEscrow.sol';
+import './Minter.sol';
+import './MNTToken.sol';
+import './VotingEscrow.sol';
 
 interface VotingEscrowBoost{
   function adjusted_balance_of(address _account) external view returns(uint256);
@@ -26,12 +27,6 @@ interface Controller {
   function voting_escrow() external view returns(address);
   function checkpoint() external;
   function checkpoint_gauge(address addr) external;
-}
-
-interface Minter{
-  function token() external view returns(address);
-  function controller() external view returns(address);
-  function minted(address user, address gauge) external view returns(uint256);
 }
 
 /**
