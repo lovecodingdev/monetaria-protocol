@@ -47,7 +47,7 @@ contract MNTToken is ERC20 {
   address public minter;
   address public admin;
 
-  constructor() public ERC20(NAME, SYMBOL) {
+  constructor() ERC20(NAME, SYMBOL) {
     uint256 init_supply = INITIAL_SUPPLY * 10 ** DECIMALS;
     _mint(msg.sender, init_supply);
 
