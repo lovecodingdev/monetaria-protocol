@@ -283,7 +283,7 @@ contract VEBoost is EIP712 {
     return true;
   }
 
-    /**
+  /**
     @notice Approves spender by owner's signature to expend owner's tokens.
         See https://eips.ethereum.org/EIPS/eip-2612.
     @dev Inspired by https://github.com/yearn/yearn-vaults/blob/main/contracts/Vault.vy#L753-L793
