@@ -14,10 +14,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import './Minter.sol';
 import './MNTToken.sol';
 import './VotingEscrow.sol';
-
-interface VotingEscrowBoost{
-  function adjusted_balance_of(address _account) external view returns(uint256);
-}
+import './VEBoostProxy.sol';
 
 interface Controller {
   function period() external view returns(int128);
@@ -88,7 +85,7 @@ contract LiquidityGauge is EIP712 {
   uint256 constant WEEK = 604800;
 
   address constant MINTER = 0xd061D61a4d941c39E5453435B6345Dc261C2fcE0;
-  address constant CRV = 0xD533a949740bb3306d119CC777fa900bA034cd52;
+  address constant MNT = 0xD533a949740bb3306d119CC777fa900bA034cd52;
   address constant VOTING_ESCROW = 0x5f3b5DfEb7B28CDbD7FAba78963EE202a494e2A2;
   address constant GAUGE_CONTROLLER = 0x2F50D538606Fa9EDD2B11E2446BEb18C9D5846bB;
   address constant VEBOOST_PROXY = 0x8E0c00ed546602fD9927DF742bbAbF726D5B0d16;
@@ -157,8 +154,8 @@ contract LiquidityGauge is EIP712 {
     admin = _admin;
 
     period_timestamp[0] = block.timestamp;
-    inflation_rate = MNTToken(CRV).rate();
-    future_epoch_time = MNTToken(CRV).future_epoch_time_write();
+    inflation_rate = MNTToken(MNT).rate();
+    future_epoch_time = MNTToken(MNT).future_epoch_time_write();
 
     string memory lp_symbol = ERC20(_lp_token).symbol();
     string memory _name = string(abi.encodePacked("Monetaria ", lp_symbol, " Gauge Deposit"));
@@ -177,16 +174,16 @@ contract LiquidityGauge is EIP712 {
   }
 
   /**
-    @notice Calculate limits which depend on the amount of CRV token per-user.
+    @notice Calculate limits which depend on the amount of MNT token per-user.
             Effectively it calculates working balances to apply amplification
-            of CRV production by CRV
+            of MNT production by MNT
     @param addr User address
     @param l User's amount of liquidity (LP tokens)
     @param L Total amount of liquidity (LP tokens)
    */
   function _update_liquidity_limit(address addr, uint256 l, uint256 L) internal {
     // To be called after totalSupply is updated
-    uint256 voting_balance = VotingEscrowBoost(VEBOOST_PROXY).adjusted_balance_of(addr);
+    uint256 voting_balance = VEBoostProxy(VEBOOST_PROXY).adjusted_balance_of(addr);
     uint256 voting_total = ERC20(VOTING_ESCROW).totalSupply();
 
     uint256 lim = l * TOKENLESS_PRODUCTION / 100;
@@ -306,8 +303,8 @@ contract LiquidityGauge is EIP712 {
     uint256 new_rate = rate;
     uint256 prev_future_epoch = future_epoch_time;
     if (prev_future_epoch >= _period_time) {
-      future_epoch_time = MNTToken(CRV).future_epoch_time_write();
-      new_rate = MNTToken(CRV).rate();
+      future_epoch_time = MNTToken(MNT).future_epoch_time_write();
+      new_rate = MNTToken(MNT).rate();
       inflation_rate = new_rate;
     }
 
@@ -800,7 +797,7 @@ contract LiquidityGauge is EIP712 {
 
   /**
     @notice Set the killed status for this contract
-    @dev When killed, the gauge always yields a rate of 0 and so cannot mint CRV
+    @dev When killed, the gauge always yields a rate of 0 and so cannot mint MNT
     @param _is_killed Killed status to set
    */
   function set_killed(bool _is_killed) external {

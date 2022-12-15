@@ -119,7 +119,7 @@ contract VotingEscrow {
 
   /**
     @notice Contract constructor
-    @param token_addr `ERC20CRV` token address
+    @param token_addr `MNTToken` token address
     @param _name Token name
     @param _symbol Token symbol
     @param _version Contract version - required for Aragon compatibility

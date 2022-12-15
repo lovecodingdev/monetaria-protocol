@@ -54,9 +54,9 @@ contract VEBoostProxy {
   }
 
   /**
-    @notice Get the adjusted veCRV balance from the active boost delegation contract
-    @param _account The account to query the adjusted veCRV balance of
-    @return veCRV balance
+    @notice Get the adjusted veMNT balance from the active boost delegation contract
+    @param _account The account to query the adjusted veMNT balance of
+    @return veMNT balance
    */
   function adjusted_balance_of(address _account) external view returns(uint256) {
     address _delegation = delegation;

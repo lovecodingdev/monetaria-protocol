@@ -84,7 +84,7 @@ contract GaugeController {
   address public admin;  // Can and will be a smart contract
   address public future_admin;  // Can and will be a smart contract
 
-  address public token;  // CRV token
+  address public token;  // MNT token
   address public voting_escrow;  // Voting escrow
 
   // Gauge parameters
@@ -126,7 +126,7 @@ contract GaugeController {
 
   /**
     @notice Contract constructor
-    @param _token `ERC20CRV` contract address
+    @param _token `MNTToken` contract address
     @param _voting_escrow `VotingEscrow` contract address
    */
   constructor(address _token, address _voting_escrow) {
@@ -561,9 +561,9 @@ contract GaugeController {
     }
     vars.old_bias = old_slope.slope * vars.old_dt;
     VotedSlope memory new_slope = VotedSlope({
-        slope: vars.slope * _user_weight / 10000,
-        end: vars.lock_end,
-        power: _user_weight
+      slope: vars.slope * _user_weight / 10000,
+      end: vars.lock_end,
+      power: _user_weight
     });
     vars.new_dt = vars.lock_end - vars.next_time;  // dev: raises when expired
     vars.new_bias = new_slope.slope * vars.new_dt;
