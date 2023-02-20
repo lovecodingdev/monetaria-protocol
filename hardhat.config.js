@@ -1,4 +1,5 @@
 require('hardhat-contract-sizer');
+require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("@typechain/hardhat");
 require('dotenv').config()
@@ -54,6 +55,13 @@ module.exports = {
     },
     goerli: {
       url: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [process.env.ACCOUNT],
+      allowUnlimitedContractSize: true,
+      gasPrice: 20000000000,
+      gas: 6000000,
+    },
+    bsctestnet: {
+      url: `https://bsc-testnet.public.blastapi.io`,
       accounts: [process.env.ACCOUNT],
       allowUnlimitedContractSize: true,
       gasPrice: 20000000000,
