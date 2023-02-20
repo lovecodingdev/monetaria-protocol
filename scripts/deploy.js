@@ -100,6 +100,16 @@ const TokenContractId = {
   BUSD: 'BUSD',
 }
 
+const TokenDecimals = {
+  MNT: 18,
+  WETH: 18,
+  USDC: 6,
+  USDT: 6,
+  WBTC: 8,
+  LINK: 18,
+  BUSD: 18,
+}
+
 AGG_DECIMALS = Math.pow(10, 8);
 const TokenPrices = {
   MNT: 5 * AGG_DECIMALS,
@@ -127,7 +137,7 @@ async function deployAllMockTokens () {
       });
       continue;
     }
-    let decimals = 18;
+    let decimals = TokenDecimals[tokenSymbol] || 18;
 
     tokens[tokenSymbol] = await deploy("MintableERC20", {
       params: [tokenSymbol, tokenSymbol, decimals],
