@@ -1,6 +1,7 @@
 require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-etherscan");
 require("@typechain/hardhat");
+require('dotenv').config()
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -12,10 +13,12 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
+task("env", "Prints env", async (taskArgs, hre) => {
+  console.log(process.env);
+});
+
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
-
-const ALCHEMY_API_KEY = "INu5-0_xdInuuUiaac_D5eO2E5LEeTPY";
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -50,14 +53,14 @@ module.exports = {
       gas: 6000000,
     },
     goerli: {
-      url: `https://eth-goerli.alchemyapi.io/v2/${ALCHEMY_API_KEY}`,
-      accounts: ['1c3480c2c549b54de1ff395ea3636942339bd26c7d821e6c132d2ad4acec14eb'],
+      url: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [process.env.ACCOUNT],
       allowUnlimitedContractSize: true,
       gasPrice: 20000000000,
       gas: 6000000,
-    }  
+    },
   },
   etherscan: {
-    apiKey: "S5YC7V62ZDAA2M5J32411166F2AQFG61YD",
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };
