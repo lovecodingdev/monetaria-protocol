@@ -18,6 +18,10 @@ task("env", "Prints env", async (taskArgs, hre) => {
   console.log(process.env);
 });
 
+task("network", "Prints network", async (taskArgs, hre) => {
+  console.log(await hre.ethers.provider.getNetwork());
+});
+
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
