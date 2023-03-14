@@ -330,6 +330,10 @@ async function main() {
   await tx.wait();
   console.log("ACLManager RiskAdmin: ", DEPLOYER, await aclManager.isRiskAdmin(reservesSetupHelper.address));
 
+  tx = await aclManager.addPoolAdmin(DEPLOYER);
+  await tx.wait();
+  console.log("ACLManager PoolAdmin: ", DEPLOYER, await aclManager.isPoolAdmin(reservesSetupHelper.address));
+
   console.log({DEPLOYED});
 }
 

@@ -125,7 +125,7 @@ async function main() {
   console.log("ReservesSetupHelper: ", reservesSetupHelper.address);
 
   await setupReserve(
-    '0x87ee3ED4B0fbcadAc4a3D9797a77C112ccE9143e', 
+    '0xaB1a4d4f1D656d2450692D237fdD6C7f9146e814', 
     poolAddressesProvider, 
     reservesSetupHelper
   );
