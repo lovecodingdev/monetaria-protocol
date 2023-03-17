@@ -10,6 +10,18 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function verify(params) {
+  try {
+    await hre.run("verify:verify", params);
+  } catch (error) {
+    if(String(error).includes("already verified")){
+      console.log(`${params.address} is already verified.`);
+    }else{
+      console.log(error)
+    }
+  }
+}
+
 async function deploy(contractName, {config, params = [], wait = AVG_BLOCK_TIME, key} = {}) {
   var ContractFactory;
   if (config){
@@ -29,6 +41,12 @@ async function deploy(contractName, {config, params = [], wait = AVG_BLOCK_TIME,
     // await sleep(wait);
     DEPLOYED[deployedKey] = contract.address;
     console.log(`${deployedKey} deployed to: ${contract.address}`);
+
+    await verify({
+      address: contract.address,
+      constructorArguments: params
+    });
+    console.log(`${deployedKey} verified`);
   }
   return contract;
 }
@@ -39,5 +57,6 @@ module.exports = {
   GRACE_PERIOD,
 
   sleep,
+  verify,
   deploy
 }
