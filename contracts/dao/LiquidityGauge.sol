@@ -1,28 +1,37 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.9;
 
-import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import {ERC20} from '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
-import {Address} from "@openzeppelin/contracts/utils/Address.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { IERC1271 } from "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
-import './Minter.sol';
-import './MNTToken.sol';
-import './VotingEscrow.sol';
-import './VEBoostProxy.sol';
+import "./Minter.sol";
+import "./MNTToken.sol";
+import "./VotingEscrow.sol";
+import "./VEBoostProxy.sol";
 
 interface Controller {
-  function period() external view returns(int128);
-  function period_write() external returns(int128);
-  function period_timestamp(int128 p) external view returns(uint256);
-  function gauge_relative_weight(address addr, uint256 time) external view returns(uint256);
-  function voting_escrow() external view returns(address);
+  function period() external view returns (int128);
+
+  function period_write() external returns (int128);
+
+  function period_timestamp(int128 p) external view returns (uint256);
+
+  function gauge_relative_weight(
+    address addr,
+    uint256 time
+  ) external view returns (uint256);
+
+  function voting_escrow() external view returns (address);
+
   function checkpoint() external;
+
   function checkpoint_gauge(address addr) external;
 }
 
@@ -34,35 +43,21 @@ interface Controller {
 contract LiquidityGauge is EIP712 {
   using Address for address;
 
-  event Deposit (
-    address indexed provider,
-    uint256 value
-  );
-  event Withdraw (
-    address indexed provider,
-    uint256 value
-  );
-  event UpdateLiquidityLimit (
+  event Deposit(address indexed provider, uint256 value);
+  event Withdraw(address indexed provider, uint256 value);
+  event UpdateLiquidityLimit(
     address user,
     uint256 original_balance,
     uint256 original_supply,
     uint256 working_balance,
     uint256 working_supply
   );
-  event CommitOwnership (
-    address admin
-  );
-  event ApplyOwnership (
-    address admin
-  );
-  event Transfer (
-    address indexed _from,
-    address indexed _to,
-    uint256 _value
-  );
+  event CommitOwnership(address admin);
+  event ApplyOwnership(address admin);
+  event Transfer(address indexed _from, address indexed _to, uint256 _value);
   event Approval(
-    address indexed _owner, 
-    address indexed _spender, 
+    address indexed _owner,
+    address indexed _spender,
     uint256 _value
   );
   struct Reward {
@@ -75,9 +70,16 @@ contract LiquidityGauge is EIP712 {
   }
 
   // keccak256("isValidSignature(bytes32,bytes)")[:4] << 224
-  bytes32 constant ERC1271_MAGIC_VAL = 0x1626ba7e00000000000000000000000000000000000000000000000000000000;
-  bytes32 constant EIP712_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
-  bytes32 constant PERMIT_TYPEHASH = keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
+  bytes32 constant ERC1271_MAGIC_VAL =
+    0x1626ba7e00000000000000000000000000000000000000000000000000000000;
+  bytes32 constant EIP712_TYPEHASH =
+    keccak256(
+      "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+    );
+  bytes32 constant PERMIT_TYPEHASH =
+    keccak256(
+      "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+    );
   string constant VERSION = "v1.0.0";
 
   uint256 constant MAX_REWARDS = 8;
@@ -85,12 +87,11 @@ contract LiquidityGauge is EIP712 {
   uint256 constant WEEK = 604800;
 
   //Goerli Test Network
-  address constant MINTER = 0xcC3a91ADc4868011dd55f919dee1566ce4970f0a;
-  address constant MNT = 0xe21D8CC1dFde309231cfB5E7B55558A0283a9Da6;
-  address constant VOTING_ESCROW = 0x0d50d8534fB3e718801b62f560eDb4e544A57CAf;
-  address constant GAUGE_CONTROLLER = 0xB6f58B60b09268ac615B881AABd46295F4eAd88a;
-  address constant VEBOOST_PROXY = 0x09c2A924e8CB3E06291735fbCC09F35810150D31;
-
+  address immutable MINTER;
+  address immutable MNT;
+  address immutable VOTING_ESCROW;
+  address immutable GAUGE_CONTROLLER;
+  address immutable VEBOOST_PROXY;
 
   string private NAME;
   string private SYMBOL;
@@ -151,26 +152,47 @@ contract LiquidityGauge is EIP712 {
     @param _lp_token Liquidity Pool contract address
     @param _admin Admin who can kill the gauge
    */
-  constructor(address _lp_token, address _admin) EIP712("Monetaria", "1") {
+  constructor(
+    address _lp_token,
+    address _admin,
+    address _minter,
+    address _mnt,
+    address _voting_escrow,
+    address _gauge_controller,
+    address _veboost_proxy
+  ) EIP712("Monetaria", "1") {
     admin = _admin;
 
     period_timestamp[0] = block.timestamp;
-    inflation_rate = MNTToken(MNT).rate();
-    future_epoch_time = MNTToken(MNT).future_epoch_time_write();
+    inflation_rate = MNTToken(_mnt).rate();
+    future_epoch_time = MNTToken(_mnt).future_epoch_time_write();
 
     string memory lp_symbol = ERC20(_lp_token).symbol();
-    string memory _name = string(abi.encodePacked("Monetaria ", lp_symbol, " Gauge Deposit"));
+    string memory _name = string(
+      abi.encodePacked("Monetaria ", lp_symbol, " Gauge Deposit")
+    );
 
     NAME = _name;
     SYMBOL = string(abi.encodePacked(lp_symbol, "-gauge"));
     _DOMAIN_SEPARATOR = keccak256(
-      abi.encode(EIP712_TYPEHASH, keccak256(bytes(_name)), keccak256(bytes(VERSION)), block.chainid, address(this))
+      abi.encode(
+        EIP712_TYPEHASH,
+        keccak256(bytes(_name)),
+        keccak256(bytes(VERSION)),
+        block.chainid,
+        address(this)
+      )
     );
 
     LP_TOKEN = _lp_token;
+    MINTER = _minter;
+    MNT = _mnt;
+    VOTING_ESCROW = _voting_escrow;
+    GAUGE_CONTROLLER = _gauge_controller;
+    VEBOOST_PROXY = _veboost_proxy;
   }
 
-  function integrate_checkpoint() external view returns(uint256){
+  function integrate_checkpoint() external view returns (uint256) {
     return period_timestamp[uint256(int256(period))];
   }
 
@@ -182,14 +204,22 @@ contract LiquidityGauge is EIP712 {
     @param l User's amount of liquidity (LP tokens)
     @param L Total amount of liquidity (LP tokens)
    */
-  function _update_liquidity_limit(address addr, uint256 l, uint256 L) internal {
+  function _update_liquidity_limit(
+    address addr,
+    uint256 l,
+    uint256 L
+  ) internal {
     // To be called after totalSupply is updated
-    uint256 voting_balance = VEBoostProxy(VEBOOST_PROXY).adjusted_balance_of(addr);
+    uint256 voting_balance = VEBoostProxy(VEBOOST_PROXY).adjusted_balance_of(
+      addr
+    );
     uint256 voting_total = ERC20(VOTING_ESCROW).totalSupply();
 
-    uint256 lim = l * TOKENLESS_PRODUCTION / 100;
+    uint256 lim = (l * TOKENLESS_PRODUCTION) / 100;
     if (voting_total > 0) {
-      lim += L * voting_balance / voting_total * (100 - TOKENLESS_PRODUCTION) / 100;
+      lim +=
+        (((L * voting_balance) / voting_total) * (100 - TOKENLESS_PRODUCTION)) /
+        100;
     }
 
     lim = l < lim ? l : lim;
@@ -208,17 +238,22 @@ contract LiquidityGauge is EIP712 {
     uint256 user_balance;
     address receiver;
     uint256 _reward_count;
-
     address token;
     uint256 integral;
     uint256 last_update;
     uint256 duration;
   }
-  function _checkpoint_rewards(address _user, uint256 _total_supply, bool _claim, address _receiver) internal {
+
+  function _checkpoint_rewards(
+    address _user,
+    uint256 _total_supply,
+    bool _claim,
+    address _receiver
+  ) internal {
     CheckPointRewardsVars memory vars;
     vars.user_balance = 0;
     vars.receiver = _receiver;
-    if (_user != address(0)){
+    if (_user != address(0)) {
       vars.user_balance = balanceOf[_user];
       if (_claim && _receiver == address(0)) {
         // if receiver is not explicitly declared, check if a default receiver is set
@@ -232,18 +267,23 @@ contract LiquidityGauge is EIP712 {
 
     vars._reward_count = reward_count;
     for (uint i = 0; i < MAX_REWARDS; i++) {
-      if (i == vars._reward_count){
+      if (i == vars._reward_count) {
         break;
       }
       vars.token = reward_tokens[i];
 
       vars.integral = reward_data[vars.token].integral;
-      vars.last_update = Math.min(block.timestamp, reward_data[vars.token].period_finish);
+      vars.last_update = Math.min(
+        block.timestamp,
+        reward_data[vars.token].period_finish
+      );
       vars.duration = vars.last_update - reward_data[vars.token].last_update;
       if (vars.duration != 0) {
         reward_data[vars.token].last_update = vars.last_update;
         if (_total_supply != 0) {
-          vars.integral += vars.duration * reward_data[vars.token].rate * 10**18 / _total_supply;
+          vars.integral +=
+            (vars.duration * reward_data[vars.token].rate * 10 ** 18) /
+            _total_supply;
           reward_data[vars.token].integral = vars.integral;
         }
       }
@@ -254,13 +294,15 @@ contract LiquidityGauge is EIP712 {
 
         if (integral_for < vars.integral) {
           reward_integral_for[vars.token][_user] = vars.integral;
-          new_claimable = vars.user_balance * (vars.integral - integral_for) / 10**18;
+          new_claimable =
+            (vars.user_balance * (vars.integral - integral_for)) /
+            10 ** 18;
         }
 
         uint256 _claim_data = claim_data[_user][vars.token];
         uint256 total_claimable = (_claim_data >> 128) + new_claimable; // shift(claim_data, -128)
         if (total_claimable > 0) {
-          uint256 total_claimed = _claim_data % 2**128;
+          uint256 total_claimed = _claim_data % 2 ** 128;
           if (_claim) {
             // response: Bytes[32] = raw_call(
             //     token,
@@ -273,8 +315,8 @@ contract LiquidityGauge is EIP712 {
             // )
             // (bool success, bytes memory response) = token.call{value: msg.value}(
             //   abi.encodeWithSignature(
-            //     "transfer(address,uint256)", 
-            //     receiver, 
+            //     "transfer(address,uint256)",
+            //     receiver,
             //     total_claimable
             //   )
             // );
@@ -284,8 +326,10 @@ contract LiquidityGauge is EIP712 {
             require(ERC20(vars.token).transfer(vars.receiver, total_claimable));
 
             claim_data[_user][vars.token] = total_claimed + total_claimable;
-          }else if (new_claimable > 0) {
-            claim_data[_user][vars.token] = total_claimed + (total_claimable << 128);
+          } else if (new_claimable > 0) {
+            claim_data[_user][vars.token] =
+              total_claimed +
+              (total_claimable << 128);
           }
         }
       }
@@ -299,7 +343,9 @@ contract LiquidityGauge is EIP712 {
   function _checkpoint(address addr) internal {
     int128 _period = period;
     uint256 _period_time = period_timestamp[uint256(int256(_period))];
-    uint256 _integrate_inv_supply = integrate_inv_supply[uint256(int256(_period))];
+    uint256 _integrate_inv_supply = integrate_inv_supply[
+      uint256(int256(_period))
+    ];
     uint256 rate = inflation_rate;
     uint256 new_rate = rate;
     uint256 prev_future_epoch = future_epoch_time;
@@ -319,24 +365,36 @@ contract LiquidityGauge is EIP712 {
       uint256 _working_supply = working_supply;
       Controller(GAUGE_CONTROLLER).checkpoint_gauge(address(this));
       uint256 prev_week_time = _period_time;
-      uint256 week_time = Math.min((_period_time + WEEK) / WEEK * WEEK, block.timestamp);
+      uint256 week_time = Math.min(
+        ((_period_time + WEEK) / WEEK) * WEEK,
+        block.timestamp
+      );
 
-      for(int i = 0; i < 500; i ++){
+      for (int i = 0; i < 500; i++) {
         uint256 dt = week_time - prev_week_time;
-        uint256 w = Controller(GAUGE_CONTROLLER).gauge_relative_weight(address(this), prev_week_time / WEEK * WEEK);
+        uint256 w = Controller(GAUGE_CONTROLLER).gauge_relative_weight(
+          address(this),
+          (prev_week_time / WEEK) * WEEK
+        );
 
         if (_working_supply > 0) {
-          if (prev_future_epoch >= prev_week_time && prev_future_epoch < week_time){
+          if (
+            prev_future_epoch >= prev_week_time && prev_future_epoch < week_time
+          ) {
             // If we went across one or multiple epochs, apply the rate
             // of the first epoch until it ends, and then the rate of
             // the last epoch.
             // If more than one epoch is crossed - the gauge gets less,
             // but that'd meen it wasn't called for more than 1 year
-            _integrate_inv_supply += rate * w * (prev_future_epoch - prev_week_time) / _working_supply;
+            _integrate_inv_supply +=
+              (rate * w * (prev_future_epoch - prev_week_time)) /
+              _working_supply;
             rate = new_rate;
-            _integrate_inv_supply += rate * w * (week_time - prev_future_epoch) / _working_supply;
-          }else{
-            _integrate_inv_supply += rate * w * dt / _working_supply;
+            _integrate_inv_supply +=
+              (rate * w * (week_time - prev_future_epoch)) /
+              _working_supply;
+          } else {
+            _integrate_inv_supply += (rate * w * dt) / _working_supply;
           }
           // On precisions of the calculation
           // rate ~= 10e18
@@ -360,7 +418,10 @@ contract LiquidityGauge is EIP712 {
 
     // Update user-specific integrals
     uint256 _working_balance = working_balances[addr];
-    integrate_fraction[addr] += _working_balance * (_integrate_inv_supply - integrate_inv_supply_of[addr]) / 10 ** 18;
+    integrate_fraction[addr] +=
+      (_working_balance *
+        (_integrate_inv_supply - integrate_inv_supply_of[addr])) /
+      10 ** 18;
     integrate_inv_supply_of[addr] = _integrate_inv_supply;
     integrate_checkpoint_of[addr] = block.timestamp;
   }
@@ -370,7 +431,7 @@ contract LiquidityGauge is EIP712 {
     @param addr User address
     @return bool success
    */
-  function user_checkpoint(address addr) external returns(bool) {
+  function user_checkpoint(address addr) external returns (bool) {
     require(msg.sender == addr || msg.sender == MINTER); // dev: unauthorized
     _checkpoint(addr);
     _update_liquidity_limit(addr, balanceOf[addr], totalSupply);
@@ -382,9 +443,10 @@ contract LiquidityGauge is EIP712 {
     @dev This function should be manually changed to "view" in the ABI
     @return uint256 number of claimable tokens per user
    */
-  function claimable_tokens(address addr) external returns(uint256){
+  function claimable_tokens(address addr) external returns (uint256) {
     _checkpoint(addr);
-    return integrate_fraction[addr] - Minter(MINTER).minted(addr, address(this));
+    return
+      integrate_fraction[addr] - Minter(MINTER).minted(addr, address(this));
   }
 
   /**
@@ -393,8 +455,11 @@ contract LiquidityGauge is EIP712 {
     @param _token Token to get reward amount for
     @return uint256 Total amount of `_token` already claimed by `_addr`
    */
-  function claimed_reward(address _addr, address _token) external view returns(uint256){
-    return claim_data[_addr][_token] % 2**128;
+  function claimed_reward(
+    address _addr,
+    address _token
+  ) external view returns (uint256) {
+    return claim_data[_addr][_token] % 2 ** 128;
   }
 
   /**
@@ -403,17 +468,25 @@ contract LiquidityGauge is EIP712 {
     @param _reward_token Token to get reward amount for
     @return uint256 Claimable reward token amount
    */
-  function claimable_reward(address _user, address _reward_token) external view returns(uint256){
+  function claimable_reward(
+    address _user,
+    address _reward_token
+  ) external view returns (uint256) {
     uint256 integral = reward_data[_reward_token].integral;
     uint256 total_supply = totalSupply;
     if (total_supply != 0) {
-      uint256 last_update = Math.min(block.timestamp, reward_data[_reward_token].period_finish);
+      uint256 last_update = Math.min(
+        block.timestamp,
+        reward_data[_reward_token].period_finish
+      );
       uint256 duration = last_update - reward_data[_reward_token].last_update;
-      integral += (duration * reward_data[_reward_token].rate * 10**18 / total_supply);
+      integral += ((duration * reward_data[_reward_token].rate * 10 ** 18) /
+        total_supply);
     }
 
     uint256 integral_for = reward_integral_for[_reward_token][_user];
-    uint256 new_claimable = balanceOf[_user] * (integral - integral_for) / 10**18;
+    uint256 new_claimable = (balanceOf[_user] * (integral - integral_for)) /
+      10 ** 18;
 
     return (claim_data[_user][_reward_token] >> 128) + new_claimable;
   }
@@ -434,8 +507,8 @@ contract LiquidityGauge is EIP712 {
                      ZERO_ADDRESS, uses the default reward receiver
                      for the caller
    */
-  // @nonreentrant('lock')  
-  function _claim_rewards(address _addr, address _receiver ) private {
+  // @nonreentrant('lock')
+  function _claim_rewards(address _addr, address _receiver) private {
     if (_receiver != address(0)) {
       require(_addr == msg.sender); // dev: cannot redirect when claiming for another user
     }
@@ -462,12 +535,13 @@ contract LiquidityGauge is EIP712 {
   function kick(address addr) external {
     uint256 t_last = integrate_checkpoint_of[addr];
     uint256 t_ve = VotingEscrow(VOTING_ESCROW).user_point_history__ts(
-      addr, VotingEscrow(VOTING_ESCROW).user_point_epoch(addr)
+      addr,
+      VotingEscrow(VOTING_ESCROW).user_point_epoch(addr)
     );
     uint256 _balance = balanceOf[addr];
 
     require(ERC20(VOTING_ESCROW).balanceOf(addr) == 0 || t_ve > t_last); // dev: kick not allowed
-    require(working_balances[addr] > _balance * TOKENLESS_PRODUCTION / 100); // dev: kick not needed
+    require(working_balances[addr] > (_balance * TOKENLESS_PRODUCTION) / 100); // dev: kick not needed
 
     _checkpoint(addr);
     _update_liquidity_limit(addr, balanceOf[addr], totalSupply);
@@ -480,7 +554,11 @@ contract LiquidityGauge is EIP712 {
     @param _addr Address to deposit for
    */
   // @nonreentrant('lock')
-  function _deposit(uint256 _value, address _addr, bool _claim_rewards_) private {
+  function _deposit(
+    uint256 _value,
+    address _addr,
+    bool _claim_rewards_
+  ) private {
     _checkpoint(_addr);
 
     if (_value != 0) {
@@ -512,7 +590,11 @@ contract LiquidityGauge is EIP712 {
     _deposit(_value, _addr, false);
   }
 
-  function deposit(uint256 _value, address _addr, bool _claim_rewards_) external {
+  function deposit(
+    uint256 _value,
+    address _addr,
+    bool _claim_rewards_
+  ) external {
     _deposit(_value, _addr, _claim_rewards_);
   }
 
@@ -529,7 +611,12 @@ contract LiquidityGauge is EIP712 {
       bool is_rewards = reward_count != 0;
       uint256 total_supply = totalSupply;
       if (is_rewards) {
-        _checkpoint_rewards(msg.sender, total_supply, _claim_rewards_, address(0));
+        _checkpoint_rewards(
+          msg.sender,
+          total_supply,
+          _claim_rewards_,
+          address(0)
+        );
       }
 
       total_supply -= _value;
@@ -586,7 +673,7 @@ contract LiquidityGauge is EIP712 {
     @param _value The amount to be transferred.
    */
   // @nonreentrant('lock')
-  function transfer(address _to, uint256 _value) external returns(bool) {
+  function transfer(address _to, uint256 _value) external returns (bool) {
     _transfer(msg.sender, _to, _value);
 
     return true;
@@ -600,7 +687,11 @@ contract LiquidityGauge is EIP712 {
     @param _value uint256 the amount of tokens to be transferred
    */
   // @nonreentrant('lock')
-  function transferFrom(address _from, address _to, uint256 _value) external returns(bool) {
+  function transferFrom(
+    address _from,
+    address _to,
+    uint256 _value
+  ) external returns (bool) {
     uint256 _allowance = allowance[_from][msg.sender];
     if (_allowance != type(uint256).max) {
       allowance[_from][msg.sender] = _allowance - _value;
@@ -612,28 +703,24 @@ contract LiquidityGauge is EIP712 {
   }
 
   /**
-    * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
-    *
-    * This internal function is equivalent to `approve`, and can be used to
-    * e.g. set automatic allowances for certain subsystems, etc.
-    *
-    * Emits an {Approval} event.
-    *
-    * Requirements:
-    *
-    * - `owner` cannot be the zero address.
-    * - `spender` cannot be the zero address.
-    */
-  function _approve(
-      address owner,
-      address spender,
-      uint256 amount
-  ) internal {
-      require(owner != address(0), "ERC20: approve from the zero address");
-      require(spender != address(0), "ERC20: approve to the zero address");
+   * @dev Sets `amount` as the allowance of `spender` over the `owner` s tokens.
+   *
+   * This internal function is equivalent to `approve`, and can be used to
+   * e.g. set automatic allowances for certain subsystems, etc.
+   *
+   * Emits an {Approval} event.
+   *
+   * Requirements:
+   *
+   * - `owner` cannot be the zero address.
+   * - `spender` cannot be the zero address.
+   */
+  function _approve(address owner, address spender, uint256 amount) internal {
+    require(owner != address(0), "ERC20: approve from the zero address");
+    require(spender != address(0), "ERC20: approve to the zero address");
 
-      allowance[owner][spender] = amount;
-      emit Approval(owner, spender, amount);
+    allowance[owner][spender] = amount;
+    emit Approval(owner, spender, amount);
   }
 
   /**
@@ -647,8 +734,8 @@ contract LiquidityGauge is EIP712 {
     @param _spender The address which will transfer the funds
     @param _value The amount of tokens that may be transferred
     @return bool success
-   */  
-  function approve(address _spender, uint256 _value) external returns(bool) {
+   */
+  function approve(address _spender, uint256 _value) external returns (bool) {
     address owner = msg.sender;
     _approve(owner, _spender, _value);
     return true;
@@ -683,7 +770,9 @@ contract LiquidityGauge is EIP712 {
 
     uint256 nonce = nonces[_owner];
 
-    bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, _owner, _spender, _value, nonce, _deadline));
+    bytes32 structHash = keccak256(
+      abi.encode(PERMIT_TYPEHASH, _owner, _spender, _value, nonce, _deadline)
+    );
 
     bytes32 hash = _hashTypedDataV4(structHash);
 
@@ -697,43 +786,52 @@ contract LiquidityGauge is EIP712 {
   }
 
   /**
-    * @dev Atomically increases the allowance granted to `spender` by the caller.
-    *
-    * This is an alternative to {approve} that can be used as a mitigation for
-    * problems described in {IERC20-approve}.
-    *
-    * Emits an {Approval} event indicating the updated allowance.
-    *
-    * Requirements:
-    *
-    * - `spender` cannot be the zero address.
-    */
-  function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
+   * @dev Atomically increases the allowance granted to `spender` by the caller.
+   *
+   * This is an alternative to {approve} that can be used as a mitigation for
+   * problems described in {IERC20-approve}.
+   *
+   * Emits an {Approval} event indicating the updated allowance.
+   *
+   * Requirements:
+   *
+   * - `spender` cannot be the zero address.
+   */
+  function increaseAllowance(
+    address spender,
+    uint256 addedValue
+  ) public virtual returns (bool) {
     address owner = msg.sender;
     _approve(owner, spender, allowance[owner][spender] + addedValue);
     return true;
   }
 
   /**
-    * @dev Atomically decreases the allowance granted to `spender` by the caller.
-    *
-    * This is an alternative to {approve} that can be used as a mitigation for
-    * problems described in {IERC20-approve}.
-    *
-    * Emits an {Approval} event indicating the updated allowance.
-    *
-    * Requirements:
-    *
-    * - `spender` cannot be the zero address.
-    * - `spender` must have allowance for the caller of at least
-    * `subtractedValue`.
-    */
-  function decreaseAllowance(address spender, uint256 subtractedValue) public virtual returns (bool) {
+   * @dev Atomically decreases the allowance granted to `spender` by the caller.
+   *
+   * This is an alternative to {approve} that can be used as a mitigation for
+   * problems described in {IERC20-approve}.
+   *
+   * Emits an {Approval} event indicating the updated allowance.
+   *
+   * Requirements:
+   *
+   * - `spender` cannot be the zero address.
+   * - `spender` must have allowance for the caller of at least
+   * `subtractedValue`.
+   */
+  function decreaseAllowance(
+    address spender,
+    uint256 subtractedValue
+  ) public virtual returns (bool) {
     address owner = msg.sender;
     uint256 currentAllowance = allowance[owner][spender];
-    require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+    require(
+      currentAllowance >= subtractedValue,
+      "ERC20: decreased allowance below zero"
+    );
     unchecked {
-        _approve(owner, spender, currentAllowance - subtractedValue);
+      _approve(owner, spender, currentAllowance - subtractedValue);
     }
 
     return true;
@@ -754,7 +852,10 @@ contract LiquidityGauge is EIP712 {
     reward_count = _reward_count + 1;
   }
 
-  function set_reward_distributor(address _reward_token, address _distributor) external {
+  function set_reward_distributor(
+    address _reward_token,
+    address _distributor
+  ) external {
     address current_distributor = reward_data[_reward_token].distributor;
 
     require(msg.sender == current_distributor || msg.sender == admin);
@@ -765,14 +866,17 @@ contract LiquidityGauge is EIP712 {
   }
 
   // @nonreentrant("lock")
-  function deposit_reward_token(address _reward_token, uint256 _amount) external payable {
+  function deposit_reward_token(
+    address _reward_token,
+    uint256 _amount
+  ) external payable {
     require(msg.sender == reward_data[_reward_token].distributor);
 
     _checkpoint_rewards(address(0), totalSupply, false, address(0));
 
     // (bool success, bytes memory response)  = _reward_token.call{value: msg.value}(
     //   abi.encodeWithSignature(
-    //     "transferFrom(address,address,uint256)", 
+    //     "transferFrom(address,address,uint256)",
     //     msg.sender,
     //     address(this),
     //     _amount
@@ -781,12 +885,14 @@ contract LiquidityGauge is EIP712 {
     // if (success) {
     //   require(response.length > 0);
     // }
-    require(ERC20(_reward_token).transferFrom(msg.sender, address(this), _amount));
+    require(
+      ERC20(_reward_token).transferFrom(msg.sender, address(this), _amount)
+    );
 
     uint256 period_finish = reward_data[_reward_token].period_finish;
     if (block.timestamp >= period_finish) {
       reward_data[_reward_token].rate = _amount / WEEK;
-    }else{
+    } else {
       uint256 remaining = period_finish - block.timestamp;
       uint256 leftover = remaining * reward_data[_reward_token].rate;
       reward_data[_reward_token].rate = (_amount + leftover) / WEEK;
@@ -807,13 +913,12 @@ contract LiquidityGauge is EIP712 {
     is_killed = _is_killed;
   }
 
-
   /**
     @notice Transfer ownership of GaugeController to `addr`
     @param addr Address to have ownership transferred to
    */
   function commit_transfer_ownership(address addr) external {
-    require (msg.sender == admin); // dev: admin only
+    require(msg.sender == admin); // dev: admin only
 
     future_admin = addr;
     emit CommitOwnership(addr);
@@ -833,14 +938,14 @@ contract LiquidityGauge is EIP712 {
   /**
     @notice Get the name for this gauge token
    */
-  function name() external view returns(string memory){
+  function name() external view returns (string memory) {
     return NAME;
   }
 
   /**
     @notice Get the symbol for this gauge token
    */
-  function symbol() external view returns(string memory){
+  function symbol() external view returns (string memory) {
     return SYMBOL;
   }
 
@@ -849,28 +954,28 @@ contract LiquidityGauge is EIP712 {
     @dev Implemented as a view method to reduce gas costs
     @return uint256 decimal places
    */
-  function decimals() external pure returns(uint256) {
+  function decimals() external pure returns (uint256) {
     return 18;
   }
 
   /**
     @notice Query the lp token used for this gauge
    */
-  function lp_token() external view returns(address) {
+  function lp_token() external view returns (address) {
     return LP_TOKEN;
   }
 
   /**
     @notice Get the version of this gauge
    */
-  function version() external pure returns(string memory) {
+  function version() external pure returns (string memory) {
     return VERSION;
   }
 
   /**
     @notice Domain separator for this contract
    */
-  function DOMAIN_SEPARATOR() external view returns(bytes32) {
+  function DOMAIN_SEPARATOR() external view returns (bytes32) {
     return _DOMAIN_SEPARATOR;
   }
 }
