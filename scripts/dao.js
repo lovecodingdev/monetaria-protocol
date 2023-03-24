@@ -14,6 +14,8 @@ async function main() {
   const gaugeController = await deploy("GaugeController", {
     params: [mntToken.address, veMNT.address]
   });
+  let tx = await gaugeController["add_type(string)"]('Liquidity');
+  await tx.wait();
   const veBoost = await deploy("VEBoost", {
     params: [veMNT.address]
   });
