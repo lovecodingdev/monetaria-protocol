@@ -23,10 +23,7 @@ interface Controller {
 
   function period_timestamp(int128 p) external view returns (uint256);
 
-  function gauge_relative_weight(
-    address addr,
-    uint256 time
-  ) external view returns (uint256);
+  function gauge_relative_weight(address addr, uint256 time) external view returns (uint256);
 
   function voting_escrow() external view returns (address);
 
@@ -55,11 +52,7 @@ contract LiquidityGauge is EIP712 {
   event CommitOwnership(address admin);
   event ApplyOwnership(address admin);
   event Transfer(address indexed _from, address indexed _to, uint256 _value);
-  event Approval(
-    address indexed _owner,
-    address indexed _spender,
-    uint256 _value
-  );
+  event Approval(address indexed _owner, address indexed _spender, uint256 _value);
   struct Reward {
     address token;
     address distributor;
@@ -73,13 +66,9 @@ contract LiquidityGauge is EIP712 {
   bytes32 constant ERC1271_MAGIC_VAL =
     0x1626ba7e00000000000000000000000000000000000000000000000000000000;
   bytes32 constant EIP712_TYPEHASH =
-    keccak256(
-      "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-    );
+    keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
   bytes32 constant PERMIT_TYPEHASH =
-    keccak256(
-      "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
-    );
+    keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
   string constant VERSION = "v1.0.0";
 
   uint256 constant MAX_REWARDS = 8;
@@ -87,11 +76,11 @@ contract LiquidityGauge is EIP712 {
   uint256 constant WEEK = 604800;
 
   //Goerli Test Network
-  address immutable MINTER;
-  address immutable MNT;
-  address immutable VOTING_ESCROW;
-  address immutable GAUGE_CONTROLLER;
-  address immutable VEBOOST_PROXY;
+  address public immutable MINTER;
+  address public immutable MNT;
+  address public immutable VOTING_ESCROW;
+  address public immutable GAUGE_CONTROLLER;
+  address public immutable VEBOOST_PROXY;
 
   string private NAME;
   string private SYMBOL;
@@ -105,9 +94,9 @@ contract LiquidityGauge is EIP712 {
 
   mapping(address => uint256) public balanceOf;
   uint256 public totalSupply;
-  mapping(address => mapping(address => uint256)) allowance;
+  mapping(address => mapping(address => uint256)) public allowance;
 
-  mapping(address => uint256) working_balances;
+  mapping(address => uint256) public working_balances;
   uint256 public working_supply;
 
   // For tracking external rewards
@@ -168,9 +157,7 @@ contract LiquidityGauge is EIP712 {
     future_epoch_time = MNTToken(_mnt).future_epoch_time_write();
 
     string memory lp_symbol = ERC20(_lp_token).symbol();
-    string memory _name = string(
-      abi.encodePacked("Monetaria ", lp_symbol, " Gauge Deposit")
-    );
+    string memory _name = string(abi.encodePacked("Monetaria ", lp_symbol, " Gauge Deposit"));
 
     NAME = _name;
     SYMBOL = string(abi.encodePacked(lp_symbol, "-gauge"));
@@ -204,22 +191,14 @@ contract LiquidityGauge is EIP712 {
     @param l User's amount of liquidity (LP tokens)
     @param L Total amount of liquidity (LP tokens)
    */
-  function _update_liquidity_limit(
-    address addr,
-    uint256 l,
-    uint256 L
-  ) internal {
+  function _update_liquidity_limit(address addr, uint256 l, uint256 L) internal {
     // To be called after totalSupply is updated
-    uint256 voting_balance = VEBoostProxy(VEBOOST_PROXY).adjusted_balance_of(
-      addr
-    );
+    uint256 voting_balance = VEBoostProxy(VEBOOST_PROXY).adjusted_balance_of(addr);
     uint256 voting_total = ERC20(VOTING_ESCROW).totalSupply();
 
     uint256 lim = (l * TOKENLESS_PRODUCTION) / 100;
     if (voting_total > 0) {
-      lim +=
-        (((L * voting_balance) / voting_total) * (100 - TOKENLESS_PRODUCTION)) /
-        100;
+      lim += (((L * voting_balance) / voting_total) * (100 - TOKENLESS_PRODUCTION)) / 100;
     }
 
     lim = l < lim ? l : lim;
@@ -273,10 +252,7 @@ contract LiquidityGauge is EIP712 {
       vars.token = reward_tokens[i];
 
       vars.integral = reward_data[vars.token].integral;
-      vars.last_update = Math.min(
-        block.timestamp,
-        reward_data[vars.token].period_finish
-      );
+      vars.last_update = Math.min(block.timestamp, reward_data[vars.token].period_finish);
       vars.duration = vars.last_update - reward_data[vars.token].last_update;
       if (vars.duration != 0) {
         reward_data[vars.token].last_update = vars.last_update;
@@ -294,9 +270,7 @@ contract LiquidityGauge is EIP712 {
 
         if (integral_for < vars.integral) {
           reward_integral_for[vars.token][_user] = vars.integral;
-          new_claimable =
-            (vars.user_balance * (vars.integral - integral_for)) /
-            10 ** 18;
+          new_claimable = (vars.user_balance * (vars.integral - integral_for)) / 10 ** 18;
         }
 
         uint256 _claim_data = claim_data[_user][vars.token];
@@ -327,9 +301,7 @@ contract LiquidityGauge is EIP712 {
 
             claim_data[_user][vars.token] = total_claimed + total_claimable;
           } else if (new_claimable > 0) {
-            claim_data[_user][vars.token] =
-              total_claimed +
-              (total_claimable << 128);
+            claim_data[_user][vars.token] = total_claimed + (total_claimable << 128);
           }
         }
       }
@@ -343,9 +315,7 @@ contract LiquidityGauge is EIP712 {
   function _checkpoint(address addr) internal {
     int128 _period = period;
     uint256 _period_time = period_timestamp[uint256(int256(_period))];
-    uint256 _integrate_inv_supply = integrate_inv_supply[
-      uint256(int256(_period))
-    ];
+    uint256 _integrate_inv_supply = integrate_inv_supply[uint256(int256(_period))];
     uint256 rate = inflation_rate;
     uint256 new_rate = rate;
     uint256 prev_future_epoch = future_epoch_time;
@@ -365,10 +335,7 @@ contract LiquidityGauge is EIP712 {
       uint256 _working_supply = working_supply;
       Controller(GAUGE_CONTROLLER).checkpoint_gauge(address(this));
       uint256 prev_week_time = _period_time;
-      uint256 week_time = Math.min(
-        ((_period_time + WEEK) / WEEK) * WEEK,
-        block.timestamp
-      );
+      uint256 week_time = Math.min(((_period_time + WEEK) / WEEK) * WEEK, block.timestamp);
 
       for (int i = 0; i < 500; i++) {
         uint256 dt = week_time - prev_week_time;
@@ -378,9 +345,7 @@ contract LiquidityGauge is EIP712 {
         );
 
         if (_working_supply > 0) {
-          if (
-            prev_future_epoch >= prev_week_time && prev_future_epoch < week_time
-          ) {
+          if (prev_future_epoch >= prev_week_time && prev_future_epoch < week_time) {
             // If we went across one or multiple epochs, apply the rate
             // of the first epoch until it ends, and then the rate of
             // the last epoch.
@@ -390,9 +355,7 @@ contract LiquidityGauge is EIP712 {
               (rate * w * (prev_future_epoch - prev_week_time)) /
               _working_supply;
             rate = new_rate;
-            _integrate_inv_supply +=
-              (rate * w * (week_time - prev_future_epoch)) /
-              _working_supply;
+            _integrate_inv_supply += (rate * w * (week_time - prev_future_epoch)) / _working_supply;
           } else {
             _integrate_inv_supply += (rate * w * dt) / _working_supply;
           }
@@ -419,8 +382,7 @@ contract LiquidityGauge is EIP712 {
     // Update user-specific integrals
     uint256 _working_balance = working_balances[addr];
     integrate_fraction[addr] +=
-      (_working_balance *
-        (_integrate_inv_supply - integrate_inv_supply_of[addr])) /
+      (_working_balance * (_integrate_inv_supply - integrate_inv_supply_of[addr])) /
       10 ** 18;
     integrate_inv_supply_of[addr] = _integrate_inv_supply;
     integrate_checkpoint_of[addr] = block.timestamp;
@@ -445,8 +407,7 @@ contract LiquidityGauge is EIP712 {
    */
   function claimable_tokens(address addr) external returns (uint256) {
     _checkpoint(addr);
-    return
-      integrate_fraction[addr] - Minter(MINTER).minted(addr, address(this));
+    return integrate_fraction[addr] - Minter(MINTER).minted(addr, address(this));
   }
 
   /**
@@ -455,10 +416,7 @@ contract LiquidityGauge is EIP712 {
     @param _token Token to get reward amount for
     @return uint256 Total amount of `_token` already claimed by `_addr`
    */
-  function claimed_reward(
-    address _addr,
-    address _token
-  ) external view returns (uint256) {
+  function claimed_reward(address _addr, address _token) external view returns (uint256) {
     return claim_data[_addr][_token] % 2 ** 128;
   }
 
@@ -468,25 +426,17 @@ contract LiquidityGauge is EIP712 {
     @param _reward_token Token to get reward amount for
     @return uint256 Claimable reward token amount
    */
-  function claimable_reward(
-    address _user,
-    address _reward_token
-  ) external view returns (uint256) {
+  function claimable_reward(address _user, address _reward_token) external view returns (uint256) {
     uint256 integral = reward_data[_reward_token].integral;
     uint256 total_supply = totalSupply;
     if (total_supply != 0) {
-      uint256 last_update = Math.min(
-        block.timestamp,
-        reward_data[_reward_token].period_finish
-      );
+      uint256 last_update = Math.min(block.timestamp, reward_data[_reward_token].period_finish);
       uint256 duration = last_update - reward_data[_reward_token].last_update;
-      integral += ((duration * reward_data[_reward_token].rate * 10 ** 18) /
-        total_supply);
+      integral += ((duration * reward_data[_reward_token].rate * 10 ** 18) / total_supply);
     }
 
     uint256 integral_for = reward_integral_for[_reward_token][_user];
-    uint256 new_claimable = (balanceOf[_user] * (integral - integral_for)) /
-      10 ** 18;
+    uint256 new_claimable = (balanceOf[_user] * (integral - integral_for)) / 10 ** 18;
 
     return (claim_data[_user][_reward_token] >> 128) + new_claimable;
   }
@@ -554,11 +504,7 @@ contract LiquidityGauge is EIP712 {
     @param _addr Address to deposit for
    */
   // @nonreentrant('lock')
-  function _deposit(
-    uint256 _value,
-    address _addr,
-    bool _claim_rewards_
-  ) private {
+  function _deposit(uint256 _value, address _addr, bool _claim_rewards_) private {
     _checkpoint(_addr);
 
     if (_value != 0) {
@@ -590,11 +536,7 @@ contract LiquidityGauge is EIP712 {
     _deposit(_value, _addr, false);
   }
 
-  function deposit(
-    uint256 _value,
-    address _addr,
-    bool _claim_rewards_
-  ) external {
+  function deposit(uint256 _value, address _addr, bool _claim_rewards_) external {
     _deposit(_value, _addr, _claim_rewards_);
   }
 
@@ -611,12 +553,7 @@ contract LiquidityGauge is EIP712 {
       bool is_rewards = reward_count != 0;
       uint256 total_supply = totalSupply;
       if (is_rewards) {
-        _checkpoint_rewards(
-          msg.sender,
-          total_supply,
-          _claim_rewards_,
-          address(0)
-        );
+        _checkpoint_rewards(msg.sender, total_supply, _claim_rewards_, address(0));
       }
 
       total_supply -= _value;
@@ -687,11 +624,7 @@ contract LiquidityGauge is EIP712 {
     @param _value uint256 the amount of tokens to be transferred
    */
   // @nonreentrant('lock')
-  function transferFrom(
-    address _from,
-    address _to,
-    uint256 _value
-  ) external returns (bool) {
+  function transferFrom(address _from, address _to, uint256 _value) external returns (bool) {
     uint256 _allowance = allowance[_from][msg.sender];
     if (_allowance != type(uint256).max) {
       allowance[_from][msg.sender] = _allowance - _value;
@@ -797,10 +730,7 @@ contract LiquidityGauge is EIP712 {
    *
    * - `spender` cannot be the zero address.
    */
-  function increaseAllowance(
-    address spender,
-    uint256 addedValue
-  ) public virtual returns (bool) {
+  function increaseAllowance(address spender, uint256 addedValue) public virtual returns (bool) {
     address owner = msg.sender;
     _approve(owner, spender, allowance[owner][spender] + addedValue);
     return true;
@@ -826,10 +756,7 @@ contract LiquidityGauge is EIP712 {
   ) public virtual returns (bool) {
     address owner = msg.sender;
     uint256 currentAllowance = allowance[owner][spender];
-    require(
-      currentAllowance >= subtractedValue,
-      "ERC20: decreased allowance below zero"
-    );
+    require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
     unchecked {
       _approve(owner, spender, currentAllowance - subtractedValue);
     }
@@ -852,10 +779,7 @@ contract LiquidityGauge is EIP712 {
     reward_count = _reward_count + 1;
   }
 
-  function set_reward_distributor(
-    address _reward_token,
-    address _distributor
-  ) external {
+  function set_reward_distributor(address _reward_token, address _distributor) external {
     address current_distributor = reward_data[_reward_token].distributor;
 
     require(msg.sender == current_distributor || msg.sender == admin);
@@ -866,10 +790,7 @@ contract LiquidityGauge is EIP712 {
   }
 
   // @nonreentrant("lock")
-  function deposit_reward_token(
-    address _reward_token,
-    uint256 _amount
-  ) external payable {
+  function deposit_reward_token(address _reward_token, uint256 _amount) external payable {
     require(msg.sender == reward_data[_reward_token].distributor);
 
     _checkpoint_rewards(address(0), totalSupply, false, address(0));
@@ -885,9 +806,7 @@ contract LiquidityGauge is EIP712 {
     // if (success) {
     //   require(response.length > 0);
     // }
-    require(
-      ERC20(_reward_token).transferFrom(msg.sender, address(this), _amount)
-    );
+    require(ERC20(_reward_token).transferFrom(msg.sender, address(this), _amount));
 
     uint256 period_finish = reward_data[_reward_token].period_finish;
     if (block.timestamp >= period_finish) {
