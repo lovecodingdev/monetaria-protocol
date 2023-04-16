@@ -4,6 +4,11 @@ require("@nomiclabs/hardhat-etherscan");
 require("@typechain/hardhat");
 require('dotenv').config()
 
+const { ProxyAgent, setGlobalDispatcher } = require("undici")
+
+const proxyAgent = new ProxyAgent("http://82.208.23.249:80")
+setGlobalDispatcher(proxyAgent)
+
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
