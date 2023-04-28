@@ -3,83 +3,11 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+
 const hre = require("hardhat");
 const { BigNumber, utils } = require('ethers');
 const { ethers } = require("hardhat");
-
-const GRACE_PERIOD = BigNumber.from(60 * 60);
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const AVG_BLOCK_TIME = 15_000;
-
-// let DEPLOYED = {
-//   PoolAddressesProvider: '0x665a8beb5E1E0876240aeae65F59E7C1ab95d3D8',
-//   PoolAddressesProviderRegistry: '0x47903c1589e180f07E29E387696f8911BF1242Ec',
-//   SupplyLogic: '0x206543e36ECE2cEd36331f4A106eb84fBd1d7696',
-//   BorrowLogic: '0x1CACe2064C53B5e5DEc5Ad47e3e35C455E32f51f',
-//   BridgeLogic: '0xdd2f8235732DB565264F71dC8a2E32C492cd2848',
-//   EModeLogic: '0x2E032F3Cc8A68D8aDf6806488057aF13153F4cfA',
-//   FlashLoanLogic: '0xC4CCeb8b77c0C038c122819C8cBA682f279d46E3',
-//   LiquidationLogic: '0x822AB04DA1a8979018AE8280D4Eacb8cDD295FCd',
-//   PoolLogic: '0xCBbAcC7A5827f467E29b7E0c90e46dA597aa0159',
-//   ConfiguratorLogic: '0x6939382Ab025E3be8B00528909D586D8598fC70B',
-//   Pool: '0x722F28B954C36d420F885a8bB6eB969953338800',
-//   PoolConfigurator: '0xCbc030D217A9D97e43758C0dC3b5FC24852a18d6',
-//   PriceOracle: '0xb83F9F1462896A3010994A820C783f343bA608c9',
-//   SequencerOracle: '0x2a9f33Fd39D1aB50cAd800F6696E89dD8bFfbdF9',
-//   ACLManager: '0x9871AaB8e04264fff585490cC33027fD7fd7bDE2',
-//   PriceOracleSentinel: '0x1e2a8Dd8463325A87647A34bcD24F94b0ceeAbD7',
-//   MonetariaProtocolDataProvider: '0x64E2C58F063EFED4477C313a4d4e51184CfFE198',
-//   MNT_MintableERC20: '0x13D37C126Ab634eFBa4D250d7D07b42d6D8aeCF4',
-//   MNT_MockAggregator: '0x72a1AedfB92db29d8A29f2C3EF08d0a6946F73B3',
-//   WETH_WETH9Mocked: '0x377Ad7013986Ae9af2e7329544F49916d175433D',
-//   WETH_MockAggregator: '0xF1C88F235a1292075Da43f70f6c51eefdb5BAf60',
-//   USDC_MintableERC20: '0x31e16AB7254934cB3f09C484f72ABB2d59DB48a0',
-//   USDC_MockAggregator: '0xe99D8E0a520A183bBC60057D72151a2978539741',
-//   USDT_MintableERC20: '0xdd8bdc16c47Dc594C4b36fcC1c2e62e2A46D07c6',
-//   USDT_MockAggregator: '0xED2525B8D2eA26230E6585AE7EfbcAe8b81f74f4',
-//   WBTC_MintableERC20: '0xcA2E8Abd6934597B33BE57f61385E9746448BF86',
-//   WBTC_MockAggregator: '0x47805fc6687464a0D35046d0F6D6Da2C255dD3dd',
-//   LINK_MintableERC20: '0xd0A90B92293f9174C52D4fFbf0C724C2c8EB66c6',
-//   LINK_MockAggregator: '0x39c76fD1808e1a3A1db4D3B82b360D65c48C50F3',
-//   BUSD_MintableERC20: '0x0ce8Eb2AC39EdA7950Ab8901231d22a39CBf911A',
-//   BUSD_MockAggregator: '0x3200c69BaAC0DE4F9b474F941C9eeec36891520a',
-//   MonetariaOracle: '0x75e3dD221a53f2085d233F4FEc0224B8DBC9002A',
-//   WETHGateway: '0xb0CA176D676E4fB31305E2ef887C92DDD53ad12f',
-//   WalletBalanceProvider: '0x2D55905f98B40194191e2714728F493b8a7db8B9',
-//   UiPoolDataProviderV3: '0x0D5FF4b68f3bf66008c84e1717121E143e33aFaE',
-//   UiIncentiveDataProviderV3: '0x06d24A54B4b25A8A23d65C5bfda8B6FB197A69C1',
-//   EmissionManager: '0xf07F2D84343Eb2311e47005E6B90f87B8D00d8CF',
-//   RewardsController: '0x2bF491725a4bFaF0c47C7c68151e28CAf43259c0',
-// }
-
-let DEPLOYED = {};
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function deploy(contractName, {config, params = [], wait = AVG_BLOCK_TIME, key} = {}) {
-  var ContractFactory;
-  if (config){
-    ContractFactory = await hre.ethers.getContractFactory(contractName, config);
-  }else{
-    ContractFactory = await hre.ethers.getContractFactory(contractName);
-  }
-  let contract;
-  let deployedKey = key || contractName;
-  if(DEPLOYED[deployedKey]){
-    contract = await ContractFactory.attach(DEPLOYED[deployedKey]);
-    console.log(`${deployedKey} already deployed to: ${contract.address}`);
-  }else{
-    contract = await ContractFactory.deploy(...params);
-    await contract.deployed();
-    await contract.deployTransaction.wait();
-    // await sleep(wait);
-    DEPLOYED[deployedKey] = contract.address;
-    console.log(`${deployedKey} deployed to: ${contract.address}`);
-  }
-  return contract;
-}
+const { deploy, GRACE_PERIOD, ZERO_ADDRESS } = require("./helpers");
 
 async function deployMockOracle(DEPLOYER){
   const priceOracle = await deploy("PriceOracle");
@@ -298,7 +226,7 @@ async function main() {
   const rewardsController = await deploy("RewardsController", {
     params:[emissionManager.address]
   });
-  await emissionManager.setRewardsController(rewardsController.address);
+  tx = await emissionManager.setRewardsController(rewardsController.address);
   await tx.wait();
   console.log("EmissionManager RewardsController: ", await emissionManager.getRewardsController());
 
@@ -328,9 +256,11 @@ async function main() {
 
   tx = await aclManager.addRiskAdmin(DEPLOYER);
   await tx.wait();
-  console.log("ACLManager RiskAdmin: ", DEPLOYER, await aclManager.isRiskAdmin(reservesSetupHelper.address));
+  console.log("ACLManager RiskAdmin: ", DEPLOYER, await aclManager.isRiskAdmin(DEPLOYER));
 
-  console.log({DEPLOYED});
+  tx = await aclManager.addPoolAdmin(DEPLOYER);
+  await tx.wait();
+  console.log("ACLManager PoolAdmin: ", DEPLOYER, await aclManager.isPoolAdmin(DEPLOYER));
 }
 
 // We recommend this pattern to be able to use async/await everywhere
