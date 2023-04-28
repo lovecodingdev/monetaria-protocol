@@ -14,7 +14,7 @@ async function verify(params) {
   try {
     await hre.run("verify:verify", params);
   } catch (error) {
-    if(String(error).includes("already verified")){
+    if(String(error).includes("Reason: Already Verified")){
       console.log(`${params.address} is already verified.`);
     }else{
       console.log(error)
