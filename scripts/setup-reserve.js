@@ -8,8 +8,10 @@ const { BigNumber, utils } = require('ethers');
 const { ethers } = require("hardhat");
 const { ZERO_ADDRESS, deploy } = require("./helpers")
 
-const poolAddressesProviderAddress = '0xcc6E0458845CBe15a0E4f980C5F1543E9d8316d5';
-const reservesSetupHelperAddress = '0x822AB04DA1a8979018AE8280D4Eacb8cDD295FCd'
+//Input
+const POOL_ADDRESS_PROVIDER = '0x254eCbA99Ebef34aEFAF367725f0a940d6e2fbeB';
+const RESERVES_SETUP_HELPER = '0x019E2a0bD139D13B6CAbEF9a808E642FcE90c0Ea'
+const UNDERLYING_ASSET = "0x37DFe2D29af249b78e1f42c29B21dEcee9a37e58";
 
 async function setupReserve(underlyingAsset, poolAddressesProvider, reservesSetupHelper){
   const poolConfiguratorAddress =  await poolAddressesProvider.getPoolConfigurator();
@@ -50,7 +52,8 @@ async function setupReserve(underlyingAsset, poolAddressesProvider, reservesSetu
       "10000000000000000000000000", 
       "80000000000000000000000000", 
       "200000000000000000000000000"
-    ]
+    ],
+    key: `${tokenSymbol}_DefaultReserveInterestRateStrategy`
   });
 
   const initInputParams = [
@@ -102,14 +105,8 @@ async function setupReserve(underlyingAsset, poolAddressesProvider, reservesSetu
     reserveConfigures
   );
   await tx.wait();
-  // try {
-  //   let code = await ethers.provider.call(tx, tx.blockNumber)
-  // } catch (err) {
-  //   const code = err.transaction.data.replace('Reverted ','');
-  //   console.log({err});
-  //   let reason = ethers.utils.toUtf8String('0x' + code.substr(138));
-  //   console.log('revert reason:', reason);
-  // }
+
+  console.log(await pool.getReserveData(UNDERLYING_ASSET));
 }
 
 async function main() {
@@ -118,14 +115,14 @@ async function main() {
   const DEPLOYER = signer.address;
   console.log({DEPLOYER});
 
-  const poolAddressesProvider = await hre.ethers.getContractAt("IPoolAddressesProvider", poolAddressesProviderAddress);
+  const poolAddressesProvider = await hre.ethers.getContractAt("IPoolAddressesProvider", POOL_ADDRESS_PROVIDER);
   console.log("PoolAddressesProvider: ", poolAddressesProvider.address);
 
-  const reservesSetupHelper = await hre.ethers.getContractAt("ReservesSetupHelper", reservesSetupHelperAddress);
+  const reservesSetupHelper = await hre.ethers.getContractAt("ReservesSetupHelper", RESERVES_SETUP_HELPER);
   console.log("ReservesSetupHelper: ", reservesSetupHelper.address);
 
   await setupReserve(
-    '0xaB1a4d4f1D656d2450692D237fdD6C7f9146e814', 
+    UNDERLYING_ASSET, 
     poolAddressesProvider, 
     reservesSetupHelper
   );

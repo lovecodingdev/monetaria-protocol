@@ -9,6 +9,9 @@ const { BigNumber, utils } = require('ethers');
 const { ethers } = require("hardhat");
 const { deploy, GRACE_PERIOD, ZERO_ADDRESS } = require("./helpers");
 
+//Input
+const MARKET_ID = "ETH_Goerli";
+
 async function deployMockOracle(DEPLOYER){
   const priceOracle = await deploy("PriceOracle");
   const sequencerOracle = await deploy("SequencerOracle", {
@@ -80,7 +83,6 @@ async function deployAllMockTokens () {
   return {tokens, tokenAggregators};
 };
 
-
 async function main() {
   // Hardhat always runs the compile task when running scripts with its command
   // line interface.
@@ -95,7 +97,7 @@ async function main() {
   let tx;
 
   const poolAddressesProvider = await deploy("PoolAddressesProvider", {
-    params: ["ETH_Goerli", DEPLOYER]
+    params: [MARKET_ID, DEPLOYER]
   });
   const poolAddressesProviderRegistry = await deploy("PoolAddressesProviderRegistry", {
     params: [DEPLOYER]
