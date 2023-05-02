@@ -3,18 +3,18 @@ const { BigNumber, utils } = require('ethers');
 const { ethers } = require("hardhat");
 const { ZERO_ADDRESS, deploy } = require("./helpers")
 
+//Input for ETH Goerli
+const LP_TOKEN = '0x55D603096FaeafFe8c634d1b35196a96a68e27A4'; //USDC_MTOKEN
+const _MNTToken = '0x778190A52Ec57684e2a4AAa25aE1f3b68Ce2e2a7';
+const _VotingEscrow = '0x24C3d01A33F0979a287c4F81A307AcCA001DE72e';
+const _GaugeController = '0x7335dC5eB92Ca16E12e0A8F61F075c46c065190E';
+const _VEBoostProxy = '0xCcF4C97Bd5A772EB28e60951121635DEe877d8EB';
+const _Minter = '0x758E3CdB0d49C4328FE7cb187c4215D4e6DA622d';
+
 async function main() {
   const [signer] = await ethers.getSigners();
   const DEPLOYER = signer.address;
 
-  const LP_TOKEN = '0x9E0Bb0E2dfA711F7076bB04A8cBbE526855107e7'; //WBTC_MTOKEN
-  
-  const _MNTToken = '0x64E2C58F063EFED4477C313a4d4e51184CfFE198';
-  const _VotingEscrow = '0x823C2FCEc33005188b3FA5eFB7130851C91e9562';
-  const _GaugeController = '0x39c76fD1808e1a3A1db4D3B82b360D65c48C50F3';
-  const _VEBoostProxy = '0x377Ad7013986Ae9af2e7329544F49916d175433D';
-  const _Minter = '0xF1C88F235a1292075Da43f70f6c51eefdb5BAf60';
-  
   const gaugeController = await hre.ethers.getContractAt("GaugeController", _GaugeController);
   console.log("GaugeController: ", gaugeController.address);
 

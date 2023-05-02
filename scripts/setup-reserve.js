@@ -88,15 +88,15 @@ async function setupReserve(underlyingAsset, poolAddressesProvider, reservesSetu
 
   const reserveConfigures = [
     {
-        asset: underlyingAsset,
-        baseLTV: 8500,
-        liquidationThreshold: 9000,
-        liquidationBonus: 10200,
-        reserveFactor: 5,
-        borrowCap: 1_000_000,
-        supplyCap: 1_000_000,
-        stableBorrowingEnabled: true,
-        borrowingEnabled: true,
+      asset: underlyingAsset,
+      baseLTV: 8500,
+      liquidationThreshold: 9000,
+      liquidationBonus: 10200,
+      reserveFactor: 5,
+      borrowCap: 1_000_000,
+      supplyCap: 1_000_000,
+      stableBorrowingEnabled: true,
+      borrowingEnabled: true,
     },
   ];
 
