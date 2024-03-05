@@ -1,6 +1,6 @@
 # Monetaria Protocol
 
-Try running some of the following tasks:
+## Tasks:
 
 ```shell
 npx hardhat accounts
